@@ -5,6 +5,7 @@
   <version>1.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="greco.salvatore03@gmail.com">salvatore</maintainer>
+  <license>None</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>driverless_msgs</depend>
@@ -13,6 +14,7 @@
   <depend>rclcpp</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
+  <depend>rclcpp_components</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
