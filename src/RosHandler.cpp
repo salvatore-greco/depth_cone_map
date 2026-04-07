@@ -1,6 +1,4 @@
 #include "depth_cone_map/RosHandler.hpp"
-
-
 #include "depth_cone_map/DepthConeMapNode.hpp"
 
 RosHandler::RosHandler(rclcpp::Node::SharedPtr node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10), node_ptr(node_ptr) {
