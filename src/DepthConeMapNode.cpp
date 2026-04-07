@@ -7,5 +7,10 @@ DepthConeMapNode::DepthConeMapNode(): Node("depth_cone_map") {
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr &bounding_boxes,
     const sensor_msgs::msg::Image::ConstSharedPtr &depth_image,
-    const geometry_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose) {
+    const geometry_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose)
+{
+    MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
+
+
+
 }
