@@ -9,11 +9,16 @@
 class ImageProcessor {
 
 public:
-    cv::Mat getPixelInBB(const MessageContainer &messages);
-    void coneFinder();
+    ImageProcessor() = default;
+
+    std::list<std::pair<cv::Point, cv::Point>> getPixelInBB(const MessageContainer &messages);
+
+    std::vector<cv::Point3f> coneFinder(const MessageContainer &messages,
+                                        const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
 
 private:
     std::list<std::pair<cv::Point, cv::Point>> parseBoundingBoxesJson(simdjson::padded_string json_bb);
+    const float PERCENTILE = 0.2;
 };
 
 #endif //BUILD_IMAGEPROCESSOR_H
