@@ -43,8 +43,12 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
         std::nth_element(roi_image_vector.begin(), roi_image_vector.begin()+percentile, roi_image_vector.end());
         const float cone_distance = roi_image_vector[percentile];
 
-        const int x = roi_image.cols / 2;
-        const int y = roi_image.rows - (roi_image.rows * 0.3);
+
+        cv::Size whole_size;
+        cv::Point ROI_offset;
+        roi_image.locateROI(whole_size, ROI_offset);
+        const int x = (roi_image.cols / 2)+ROI_offset.x;
+        const int y = (roi_image.rows - (roi_image.rows * 0.3))+ROI_offset.y;
         cones.emplace_back(x,y,cone_distance);
     }
     return cones;
