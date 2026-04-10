@@ -5,20 +5,27 @@
 #include <cv_bridge/cv_bridge.h>
 #include "simdjson.h"
 #include <list>
+#include <tf2_ros/buffer.h>
+
+#include "driverless_msgs/msg/marker_array_stamped.hpp"
+#include "geometry_msgs/msg/transform_stamped.h"
 
 class ImageProcessor {
 
 public:
-    ImageProcessor() = default;
+    explicit ImageProcessor(std::shared_ptr<tf2_ros::Buffer> tf2_buffer) : tf2_buffer(std::move(tf2_buffer)){}
 
     std::list<std::pair<cv::Point, cv::Point>> getPixelInBB(const MessageContainer &messages);
 
     std::vector<cv::Point3f> coneFinder(const MessageContainer &messages,
                                         const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
 
+    driverless_msgs::msg::MarkerArrayStamped cameraToWorld(const std::vector<cv::Point3f> &cones);
+
 private:
-    std::list<std::pair<cv::Point, cv::Point>> parseBoundingBoxesJson(simdjson::padded_string json_bb);
     const float PERCENTILE = 0.2;
+    std::shared_ptr<tf2_ros::Buffer> tf2_buffer;
+    geometry_msgs::msg::Point cvPoint3fToGeometryMsgsPoint(cv::Point3f point);
 };
 
 #endif //BUILD_IMAGEPROCESSOR_H

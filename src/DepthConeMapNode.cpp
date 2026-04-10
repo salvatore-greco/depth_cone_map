@@ -3,6 +3,8 @@
 // RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);
 DepthConeMapNode::DepthConeMapNode(): Node("depth_cone_map") {
     ros_handler = std::make_unique<RosHandler>(this->shared_from_this(), *this);
+    tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    image_processor = std::make_shared<ImageProcessor>(tf_buffer);
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr &bounding_boxes,

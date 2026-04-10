@@ -71,6 +71,9 @@ ament_target_dependencies(image_processor PUBLIC
         sensor_msgs
         cv_bridge
         OpenCV
+        driverless_msgs
+        tf2
+        tf2_ros
 
 )
 
@@ -96,6 +99,8 @@ ament_target_dependencies(node_composition PUBLIC
         geometry_msgs
         sensor_msgs
         cv_bridge
+        tf2
+        tf2_ros
 )
 
 
