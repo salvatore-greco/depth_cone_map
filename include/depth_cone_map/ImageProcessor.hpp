@@ -13,9 +13,9 @@
 class ImageProcessor {
 
 public:
-    explicit ImageProcessor(std::shared_ptr<tf2_ros::Buffer> tf2_buffer) : tf2_buffer(std::move(tf2_buffer)){}
+    explicit ImageProcessor(const rclcpp::Clock::SharedPtr& clock): tf2_buffer(clock) {};
 
-    std::list<std::pair<cv::Point, cv::Point>> getPixelInBB(const MessageContainer &messages);
+    std::list<std::pair<cv::Point, cv::Point>> getBBInJSON(const MessageContainer &messages);
 
     std::vector<cv::Point3f> coneFinder(const MessageContainer &messages,
                                         const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
@@ -24,8 +24,8 @@ public:
 
 private:
     const float PERCENTILE = 0.2;
-    std::shared_ptr<tf2_ros::Buffer> tf2_buffer;
-    geometry_msgs::msg::Point cvPoint3fToGeometryMsgsPoint(cv::Point3f point);
+    tf2_ros::Buffer tf2_buffer;
+    static geometry_msgs::msg::Point cvPoint3fToGeometryMsgsPoint(cv::Point3f point);
 };
 
 #endif //BUILD_IMAGEPROCESSOR_H

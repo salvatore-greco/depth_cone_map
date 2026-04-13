@@ -13,12 +13,11 @@
 
 class DepthConeMapNode : public rclcpp::Node {
 public:
-    DepthConeMapNode();
+    explicit DepthConeMapNode(const rclcpp::NodeOptions& options);
     void callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const geometry_msgs::msg::PoseStamped::ConstSharedPtr& camera_pose);
 private:
     std::unique_ptr<RosHandler> ros_handler;
-    std::shared_ptr<ImageProcessor> image_processor;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer;
+    std::unique_ptr<ImageProcessor> image_processor;
     //std::unique_ptr<CameraToWorld> camera_to_world;
 };
 

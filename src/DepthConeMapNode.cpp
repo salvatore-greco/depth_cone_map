@@ -1,18 +1,18 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
 
-// RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);
-DepthConeMapNode::DepthConeMapNode(): Node("depth_cone_map") {
-    ros_handler = std::make_unique<RosHandler>(this->shared_from_this(), *this);
-    tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    image_processor = std::make_shared<ImageProcessor>(tf_buffer);
+DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions &options) : Node("depth_cone_map", options) {
+    ros_handler = std::make_unique<RosHandler>(this, *this);
+    image_processor = std::make_unique<ImageProcessor>(this->get_clock());
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr &bounding_boxes,
-    const sensor_msgs::msg::Image::ConstSharedPtr &depth_image,
-    const geometry_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose)
-{
-    MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
-
-
-
+                                const sensor_msgs::msg::Image::ConstSharedPtr &depth_image,
+                                const geometry_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose) {
+    const MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
+    const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
+    const auto cones = image_processor->coneFinder(messages, bounding_boxes_list);
+    auto marker_array_cones = image_processor->cameraToWorld(cones);
+    ros_handler->publish_cones(std::move(marker_array_cones));
 }
+
+RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);

@@ -1,7 +1,7 @@
 #include "depth_cone_map/RosHandler.hpp"
 #include "depth_cone_map/DepthConeMapNode.hpp"
 
-RosHandler::RosHandler(rclcpp::Node::SharedPtr node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10), node_ptr(node_ptr) {
+RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10) {
     int queue_size = 10; //FIXME: trova un valore appropriato
 
     //TODO: guarda il qos degli altri nodi e matchalo sennò non funziona una mazza
@@ -21,4 +21,8 @@ RosHandler::RosHandler(rclcpp::Node::SharedPtr node_ptr, DepthConeMapNode& depth
     sync->registerCallback(std::bind(&DepthConeMapNode::callback, &depth_cone_map_node, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     cone_pub = node_ptr->create_publisher<driverless_msgs::msg::MarkerArrayStamped>("/slam/cone_map", qos);
+}
+
+void RosHandler::publish_cones(driverless_msgs::msg::MarkerArrayStamped msg) const{
+    cone_pub->publish(msg);
 }

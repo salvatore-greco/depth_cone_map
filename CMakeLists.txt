@@ -39,10 +39,7 @@ add_library(image_processor src/ImageProcessor.cpp)
 add_library(subscriber src/RosHandler.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
-rclcpp_components_register_nodes(node_composition
-        PLUGIN "composition::DepthConeMapNode"
-        EXECUTABLE depth_executable
-)
+rclcpp_components_register_nodes(node_composition "DepthConeMapNode")
 
 ament_export_dependencies(
         rclcpp
@@ -90,7 +87,7 @@ ament_target_dependencies(subscriber PUBLIC
         rclcpp_components
         cv_bridge
 )
-target_link_libraries(node_composition PUBLIC simdjson)
+target_link_libraries(node_composition PUBLIC simdjson subscriber)
 ament_target_dependencies(node_composition PUBLIC
         rclcpp
         rclcpp_components
@@ -115,11 +112,13 @@ if (BUILD_TESTING)
     set(ament_cmake_cpplint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
 endif ()
-
-install(
-        TARGETS subscriber
-        DESTINATION lib/${PROJECT_NAME}
+install(TARGETS node_composition
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
 )
-
+install(DIRECTORY
+        launch
+        DESTINATION share/${PROJECT_NAME}
+)
 ament_package()
-message(STATUS "cv_bridge include dirs: ${cv_bridge_INCLUDE_DIRS}")

@@ -2,11 +2,10 @@
 
 #include <rclcpp/logging.hpp>
 
-
-std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getPixelInBB(const MessageContainer &messages) {
+std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const MessageContainer &messages) {
     auto bb_msg = messages.getBB();
     //json arriva senza terminazione, richiesta da simdjson.
-    simdjson::padded_string json_bb(bb_msg->json); //non ha il costruttore di copia
+    simdjson::padded_string json_bb(bb_msg->json);
 
     std::list<std::pair<cv::Point, cv::Point> > bb_points;
     try {
@@ -59,13 +58,13 @@ driverless_msgs::msg::MarkerArrayStamped ImageProcessor::cameraToWorld(const std
     //TODO: assumendo che ce la faccia a trasformare fra un frame e l'altro uso tf2::TimePointZero. In caso non sia così c'è da ripensare come messageContainer viene gestito
     //Magari usando uno shared ptr o roba simile? Cambia ad ogni callback
     std::vector<visualization_msgs::msg::Marker> markers;
-    geometry_msgs::msg::TransformStamped transformation = tf2_buffer->lookupTransform(
+    geometry_msgs::msg::TransformStamped transformation = tf2_buffer.lookupTransform(
         "map", "zed_camera_link", tf2::TimePointZero);
     for (const auto &cone: cones) {
         //marker non ha le funzioni per la trasformazione
         geometry_msgs::msg::Point point_to_transform = cvPoint3fToGeometryMsgsPoint(cone);
         geometry_msgs::msg::Point point_trasformed;
-        tf2_buffer->transform(point_to_transform, point_trasformed, "map");
+        tf2_buffer.transform(point_to_transform, point_trasformed, "map");
         //se questa non funziona da tf2_geometry_msgs: tf2::do_transform(point_to_transform, point_trasformed, transformation);
         visualization_msgs::msg::Marker marker;
         //copiando come viene fatto da clustering_node

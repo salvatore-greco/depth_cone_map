@@ -20,7 +20,8 @@ class DepthConeMapNode;
 
 class RosHandler{
     public:
-        RosHandler(rclcpp::Node::SharedPtr node_ptr, DepthConeMapNode& depth_cone_map_node);
+        RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node);
+        void publish_cones(driverless_msgs::msg::MarkerArrayStamped msg) const;
 
     private:
         message_filters::Subscriber<driverless_msgs::msg::BoundingBoxes> bb_sub;
@@ -38,7 +39,6 @@ class RosHandler{
             sensor_msgs::msg::Image,
             geometry_msgs::msg::PoseStamped>>> sync;
 
-        rclcpp::Node::SharedPtr node_ptr;
 };
 
 
