@@ -5,7 +5,7 @@
 #include "driverless_msgs/msg/bounding_boxes.hpp"
 #include "driverless_msgs/msg/marker_array_stamped.hpp"
 #include "sensor_msgs/msg/image.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "driverless_msgs/msg/pose_stamped.hpp"
 #include "message_filters/subscriber.hpp"
 #include "message_filters/synchronizer.hpp"
 #include "message_filters/sync_policies/approximate_time.hpp"
@@ -14,6 +14,7 @@
 #include <message_filters/synchronizer.h>
 #include <rclcpp/qos.hpp>
 #include <functional>
+
 
 
 class DepthConeMapNode;
@@ -28,7 +29,7 @@ class RosHandler{
 
         message_filters::Subscriber<sensor_msgs::msg::Image> depth_sub;
 
-        message_filters::Subscriber<geometry_msgs::msg::PoseStamped> pose_sub;
+        message_filters::Subscriber<driverless_msgs::msg::PoseStamped> pose_sub;
 
         rclcpp::Publisher<driverless_msgs::msg::MarkerArrayStamped>::SharedPtr cone_pub;
 
@@ -37,7 +38,7 @@ class RosHandler{
         std::shared_ptr<message_filters::Synchronizer<message_filters::sync_policies::ApproximateTime<
             driverless_msgs::msg::BoundingBoxes,
             sensor_msgs::msg::Image,
-            geometry_msgs::msg::PoseStamped>>> sync;
+            driverless_msgs::msg::PoseStamped>>> sync;
 
 };
 

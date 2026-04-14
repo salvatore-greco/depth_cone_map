@@ -87,7 +87,7 @@ ament_target_dependencies(subscriber PUBLIC
         rclcpp_components
         cv_bridge
 )
-target_link_libraries(node_composition PUBLIC simdjson subscriber)
+target_link_libraries(node_composition PUBLIC simdjson subscriber image_processor)
 ament_target_dependencies(node_composition PUBLIC
         rclcpp
         rclcpp_components
