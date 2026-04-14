@@ -3,6 +3,11 @@
 #include <rclcpp/logging.hpp>
 
 std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const MessageContainer &messages) {
+    /* JSON structure
+     * [{"color": "color_string", "BB": [[x_l, y_l],[x_r, y_r]]}, ... ]
+     * dove x_l, y_l sono le coordinate del punto top left; x_r, y_r le coordinate del punto bottom right
+     */
+
     auto bb_msg = messages.getBB();
     //json arriva senza terminazione, richiesta da simdjson.
     simdjson::padded_string json_bb(bb_msg->json);
@@ -12,11 +17,18 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
         simdjson::ondemand::parser parser;
         auto doc = parser.iterate(json_bb);
         for (simdjson::ondemand::object object: doc) {
-            simdjson::ondemand::array bb_points_array = object["BB"].get_array();
-            for (auto point: bb_points_array) {
-                auto point_iterator = point.begin();
-                bb_points.emplace_back((int) *point_iterator, (int) *(++point_iterator));
-            }
+            simdjson::ondemand::array bb_points_array = object.find_field("BB").get_array();
+            auto points_it = bb_points_array.begin();
+            simdjson::ondemand::array top_left = *points_it;
+            auto top_left_it = top_left.begin();
+            const int top_left_x = static_cast<int>((*top_left_it).get_int64());
+            const int top_left_y = static_cast<int>((*(++top_left_it)).get_int64());
+            simdjson::ondemand::array bottom_right = *(++points_it);
+            auto bottom_right_it = bottom_right.begin();
+            const int bottom_right_x = static_cast<int>((*bottom_right_it).get_int64());
+            const int bottom_right_y = static_cast<int>((*(++bottom_right_it)).get_int64());
+            bb_points.emplace_back(cv::Point(top_left_x, top_left_y),
+                cv::Point(bottom_right_x, bottom_right_y));
         }
     } catch (const simdjson::simdjson_error &e) {
         RCLCPP_ERROR(rclcpp::get_logger("depth_cone_map"),
