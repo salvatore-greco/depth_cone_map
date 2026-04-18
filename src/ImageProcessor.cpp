@@ -38,7 +38,7 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
     return bb_points;
 }
 
-//va chiamata usando move semantic
+
 std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &messages,
                                                     const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
     const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getImage();
@@ -97,6 +97,11 @@ driverless_msgs::msg::MarkerArrayStamped ImageProcessor::cameraToWorld(const std
     driverless_msgs::msg::MarkerArrayStamped marker_array_stamped;
     marker_array_stamped.markers = markers;
     return marker_array_stamped;
+}
+
+cv::Mat ImageProcessor::backProjection(cv::Vec3d pixel, float depth) {
+    cv::Mat result = depth*k_matrix.inv()*pixel;
+    return result;
 }
 
 geometry_msgs::msg::Point ImageProcessor::cvPoint3fToGeometryMsgsPoint(cv::Point3f point) {
