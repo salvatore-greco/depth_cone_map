@@ -44,24 +44,25 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
     const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getImage();
     const cv_bridge::CvImageConstPtr image_converted = cv_bridge::toCvShare(image, image->encoding);
     const cv::Mat cvImage = image_converted->image;
+    static int i = 0;
 
-    std::vector<cv::Point3f> cones(bb_points.size());
+    std::vector<cv::Point3f> cones;
     for (const auto &bounding_box: bb_points) {
         cv::Rect roi(bounding_box.first, bounding_box.second);
-        cv::Mat roi_image = cvImage(roi);
-        std::vector<float> roi_image_vector = roi_image.reshape(0, 1);
-        const size_t percentile = roi_image_vector.size() * PERCENTILE;
-        std::nth_element(roi_image_vector.begin(), roi_image_vector.begin() + percentile, roi_image_vector.end());
-        const float cone_distance = roi_image_vector[percentile];
-
-
-        cv::Size whole_size;
-        cv::Point ROI_offset;
-        roi_image.locateROI(whole_size, ROI_offset);
-        const int x = (roi_image.cols / 2) + ROI_offset.x;
-        const int y = (roi_image.rows - (roi_image.rows * 0.3)) + ROI_offset.y;
-        cones.emplace_back(x, y, cone_distance);
+        cv::Mat roi_image = cvImage(roi).clone();
+        const size_t percentile = roi_image.total() * PERCENTILE;
+        auto perc_it = roi_image.begin<float>() + percentile;
+        std::nth_element(roi_image.begin<float>(), perc_it, roi_image.end<float>());
+        const float cone_distance = *perc_it;
+        if (cone_distance == 0 || isnan(cone_distance) || isinf(cone_distance))
+            continue;
+        const int x = (roi_image.cols / 2) + bounding_box.first.x;
+        const int y = roi_image.rows - roi_image.rows * 0.3 + bounding_box.first.y;
+        cv::Vec3d pixel(x,y,1);
+        cv::Mat point_camera_frame = backProjection(std::move(pixel), cone_distance);
+        cones.emplace_back(point_camera_frame.at<double>(0,0), point_camera_frame.at<double>(1,0), point_camera_frame.at<double>(2,0));
     }
+    std::cout<<i++<<" "<<cones<<std::endl;
     return cones;
 }
 
@@ -70,14 +71,22 @@ driverless_msgs::msg::MarkerArrayStamped ImageProcessor::cameraToWorld(const std
     //TODO: assumendo che ce la faccia a trasformare fra un frame e l'altro uso tf2::TimePointZero. In caso non sia così c'è da ripensare come messageContainer viene gestito
     //Magari usando uno shared ptr o roba simile? Cambia ad ogni callback
     std::vector<visualization_msgs::msg::Marker> markers;
-    geometry_msgs::msg::TransformStamped transformation = tf2_buffer.lookupTransform(
-        "map", "zed_camera_link", tf2::TimePointZero);
+    geometry_msgs::msg::TransformStamped transformation;
+    try {
+        transformation = tf2_buffer->lookupTransform(
+            "map", "zed_left_camera_optical_frame", tf2::TimePointZero);
+    }
+    catch (const tf2::LookupException& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("depth_cone_map"), "Error when looking up transform %s", e.what());
+    }
     for (const auto &cone: cones) {
         //marker non ha le funzioni per la trasformazione
         geometry_msgs::msg::Point point_to_transform = cvPoint3fToGeometryMsgsPoint(cone);
         geometry_msgs::msg::Point point_trasformed;
-        tf2_buffer.transform(point_to_transform, point_trasformed, "map");
-        //se questa non funziona da tf2_geometry_msgs: tf2::do_transform(point_to_transform, point_trasformed, transformation);
+        //tf2_buffer->transform(point_to_transform, point_trasformed, "map");
+        //se questa non funziona da tf2_geometry_msgs:
+        tf2::doTransform<geometry_msgs::msg::Point>(point_to_transform, point_trasformed, transformation);
+        std::cout<<"["<<point_trasformed.x<<","<<point_trasformed.y<<","<<point_trasformed.z<<"]"<<std::endl;
         visualization_msgs::msg::Marker marker;
         //copiando come viene fatto da clustering_node
         marker.type = marker.CYLINDER;
