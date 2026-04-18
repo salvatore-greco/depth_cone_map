@@ -1,7 +1,7 @@
 #include "depth_cone_map/RosHandler.hpp"
 #include "depth_cone_map/DepthConeMapNode.hpp"
 
-RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10) {
+RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10), node_ptr(node_ptr) {
     int queue_size = 10; //FIXME: trova un valore appropriato
 
     //TODO: guarda il qos degli altri nodi e matchalo sennò non funziona una mazza
@@ -21,8 +21,11 @@ RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_
     sync->registerCallback(std::bind(&DepthConeMapNode::callback, &depth_cone_map_node, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
     cone_pub = node_ptr->create_publisher<driverless_msgs::msg::MarkerArrayStamped>("/slam/cone_map", qos);
+
+    camera_info_sub = node_ptr->create_subscription<sensor_msgs::msg::CameraInfo>("/zed/zed_node/depth/camera_info", qos, std::bind(&DepthConeMapNode::cameraInfoCallback, &depth_cone_map_node, std::placeholders::_1));
 }
 
 void RosHandler::publish_cones(driverless_msgs::msg::MarkerArrayStamped msg) const{
+    msg.header.stamp = node_ptr->now();
     cone_pub->publish(msg);
 }

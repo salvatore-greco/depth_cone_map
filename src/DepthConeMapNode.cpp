@@ -16,4 +16,8 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     ros_handler->publish_cones(std::move(marker_array_cones));
 }
 
+void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr &camera_info){
+    image_processor->saveKMatrixAsCvMat(camera_info->k);
+    ros_handler->camera_info_unsubscribe();
+}
 RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);
