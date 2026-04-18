@@ -18,6 +18,7 @@ find_package(visualization_msgs REQUIRED) # For publishing cone position (to be 
 # To make transformation from camera to world frame
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 #cv bridge to transform image in cv::Mat
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -71,7 +72,7 @@ ament_target_dependencies(image_processor PUBLIC
         driverless_msgs
         tf2
         tf2_ros
-
+        tf2_geometry_msgs
 )
 
 target_link_libraries(subscriber PUBLIC simdjson)
@@ -83,6 +84,7 @@ ament_target_dependencies(subscriber PUBLIC
         geometry_msgs
         tf2
         tf2_ros
+        tf2_geometry_msgs
         message_filters
         rclcpp_components
         cv_bridge
@@ -98,6 +100,7 @@ ament_target_dependencies(node_composition PUBLIC
         cv_bridge
         tf2
         tf2_ros
+        tf2_geometry_msgs
 )
 
 
