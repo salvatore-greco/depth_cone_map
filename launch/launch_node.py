@@ -12,7 +12,18 @@ def generate_launch_description():
             ComposableNode(
                 package='depth_cone_map',
                 plugin='DepthConeMapNode',
-                name='DepthConeMapNode'
+                name='DepthConeMapNode',
+                remappings=[
+                    ("/bounding_boxes", "/cone_detection/output"),
+                    ("/depth_images", "/zed/zed_node/depth/depth_registered"),
+                    ("/camera_pose", "/orb_slam3/camera_pose"),
+                    ("/cones", "/slam/cone_map"),
+                    ("/camera_info", "/zed/zed_node/depth/camera_info")
+                ],
+                parameters= [{
+                    "world_frame": "map",
+                    "camera_frame": "zed_camera_link"
+                }]
             )
         ],
         output = 'both'
