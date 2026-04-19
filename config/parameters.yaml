@@ -1,0 +1,5 @@
+DepthConeMapNode:
+  ros__parameters:
+    world_frame: map
+    camera_frame: zed_left_camera_optical_frame
+    percentile: 0.2

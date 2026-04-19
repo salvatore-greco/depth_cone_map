@@ -1,8 +1,21 @@
 from launch import LaunchDescription
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+import os
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
+    debug = DeclareLaunchArgument(
+        "debug",
+        default_value='False'
+    )
+    config = os.path.join(
+        get_package_share_directory('depth_cone_map'),
+        'config',
+        'parameters.yaml'
+    )
     container = ComposableNodeContainer(
         name = 'depth_cone_map_node_container',
         namespace = '',
@@ -21,13 +34,9 @@ def generate_launch_description():
                     ("/camera_info", "/zed/zed_node/depth/camera_info"),
                     ("/cone_map", "/slam/cone_map")
                 ],
-                parameters= [{
-                    "world_frame": "map",
-                    "camera_frame": "zed_camera_link",
-                    "percentile": float(0.2)
-                }]
+                parameters=[config, {"debug": LaunchConfiguration("debug")}]
             )
         ],
         output = 'both'
     )
-    return LaunchDescription([container])
+    return LaunchDescription([debug, container])
