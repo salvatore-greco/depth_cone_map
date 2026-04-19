@@ -18,7 +18,8 @@ def generate_launch_description():
                     ("/depth_images", "/zed/zed_node/depth/depth_registered"),
                     ("/camera_pose", "/orb_slam3/camera_pose"),
                     ("/cones", "/slam/cone_map"),
-                    ("/camera_info", "/zed/zed_node/depth/camera_info")
+                    ("/camera_info", "/zed/zed_node/depth/camera_info"),
+                    ("/cone_map", "/slam/cone_map")
                 ],
                 parameters= [{
                     "world_frame": "map",
