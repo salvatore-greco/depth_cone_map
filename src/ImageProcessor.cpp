@@ -1,4 +1,5 @@
 #include "depth_cone_map/ImageProcessor.hpp"
+#include <opencv2/core/types.hpp>
 
 
 
@@ -20,15 +21,10 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
             simdjson::ondemand::array bb_points_array = object.find_field("BB").get_array();
             auto points_it = bb_points_array.begin();
             simdjson::ondemand::array top_left = *points_it;
-            auto top_left_it = top_left.begin();
-            const int top_left_x = static_cast<int>((*top_left_it).get_int64());
-            const int top_left_y = static_cast<int>((*(++top_left_it)).get_int64());
+            cv::Point top_left_point = extractBoundingBox(top_left);
             simdjson::ondemand::array bottom_right = *(++points_it);
-            auto bottom_right_it = bottom_right.begin();
-            const int bottom_right_x = static_cast<int>((*bottom_right_it).get_int64());
-            const int bottom_right_y = static_cast<int>((*(++bottom_right_it)).get_int64());
-            bb_points.emplace_back(cv::Point(top_left_x, top_left_y),
-                cv::Point(bottom_right_x, bottom_right_y));
+            cv::Point bottom_right_point = extractBoundingBox(bottom_right);
+            bb_points.emplace_back(top_left_point,bottom_right_point);
         }
     } catch (const simdjson::simdjson_error &e) {
         RCLCPP_ERROR(logger,
@@ -81,6 +77,13 @@ cv::Mat ImageProcessor::backProjection(cv::Vec3d pixel, float depth) {
 
 bool ImageProcessor::isDepthValueInvalid(const float& value) const{
     return (value == 0 || std::isnan(value) || std::isinf(value));
+}
+
+cv::Point ImageProcessor::extractBoundingBox(simdjson::ondemand::array& bounding_box) {
+    auto bounding_box_it = bounding_box.begin();
+    const int x = static_cast<int>((*bounding_box_it).get_int64());
+    const int y = static_cast<int>((*(++bounding_box_it)).get_int64());
+    return cv::Point(x, y);
 }
 
 
