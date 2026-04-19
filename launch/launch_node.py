@@ -23,7 +23,8 @@ def generate_launch_description():
                 ],
                 parameters= [{
                     "world_frame": "map",
-                    "camera_frame": "zed_camera_link"
+                    "camera_frame": "zed_camera_link",
+                    "percentile": float(0.2)
                 }]
             )
         ],

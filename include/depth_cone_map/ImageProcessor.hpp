@@ -15,7 +15,8 @@
 class ImageProcessor {
 
 public:
-    ImageProcessor(const rclcpp::Logger& logger): 
+    ImageProcessor(const rclcpp::Logger& logger, const float& percentile): 
+        PERCENTILE(percentile),
         k_matrix(3,3,CV_64FC1),
         logger(logger)
     {};
@@ -33,13 +34,15 @@ public:
 
 
 private:
-    const float PERCENTILE = 0.2;
+    const float PERCENTILE;
 
     cv::Mat k_matrix;
 
     rclcpp::Logger logger;
 
     bool isDepthValueInvalid(const float& value) const;
+
+    cv::Point extractBoundingBox(simdjson::ondemand::array& bounding_box);
 };
 
 #endif //BUILD_IMAGEPROCESSOR_H

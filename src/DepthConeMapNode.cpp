@@ -3,12 +3,16 @@
 
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions &options) : Node("depth_cone_map", options) {
     parameterDeclaration();
+    parameterInitialization();
     ros_handler = std::make_unique<RosHandler>(this, *this);
-    image_processor = std::make_unique<ImageProcessor>(this->get_logger());
+    image_processor = std::make_unique<ImageProcessor>(
+        this->get_logger(), 
+        this->percentile
+    );
     image_transformer = std::make_unique<ImageTransformer>(
         this->get_clock(), 
-        this->get_parameter("world_frame").as_string(), 
-        this->get_parameter("camera_frame").as_string(), 
+        this->map_frame_name, 
+        this->camera_frame_name, 
         this->get_logger()
     );
 }
@@ -18,6 +22,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
                                 const driverless_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose) {
     RCLCPP_INFO(this->get_logger(), "Received messages");
     const MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
+    
     const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
     const auto cones = image_processor->coneFinder(messages, bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
@@ -31,5 +36,11 @@ void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::Co
 void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("camera_frame", "zed_left_camera_frame_optical");
+    this->declare_parameter("percentile", 0.2);
+}
+void DepthConeMapNode::parameterInitialization() {
+    map_frame_name = this->get_parameter("world_frame").as_string();
+    camera_frame_name = this->get_parameter("camera_frame").as_string();
+    percentile = this->get_parameter("percentile").as_double();
 }
 RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);
