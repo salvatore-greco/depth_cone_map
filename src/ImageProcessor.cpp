@@ -1,7 +1,7 @@
 #include "depth_cone_map/ImageProcessor.hpp"
 #include <opencv2/core/types.hpp>
 
-
+//TODO: salvarsi colore e fare una struct (o una classe) Cone.
 
 std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const MessageContainer &messages) {
     /* JSON structure
@@ -47,7 +47,6 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
     catch(const cv_bridge::Exception& e){
         RCLCPP_ERROR(logger, "[cv_bridge] Error when converting sensor_msgs::msg::Image to cv::Mat: %s", e.what());
     }
-    static int i = 0;
 
     std::vector<cv::Point3f> cones;
     for (const auto &bounding_box: bb_points) {
@@ -65,12 +64,12 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
         cv::Mat point_camera_frame = backProjection(std::move(pixel), cone_distance);
         cones.emplace_back(point_camera_frame.at<double>(0,0), point_camera_frame.at<double>(1,0), point_camera_frame.at<double>(2,0));
     }
-    std::cout<<i++<<" "<<cones<<std::endl;
     return cones;
 }
 
 
 cv::Mat ImageProcessor::backProjection(cv::Vec3d pixel, float depth) {
+    //source: https://math.stackexchange.com/questions/4382437/back-projecting-a-2d-pixel-from-an-image-to-its-corresponding-3d-point
     cv::Mat result = depth*k_matrix.inv()*pixel;
     return result;
 }

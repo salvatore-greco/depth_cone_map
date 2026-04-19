@@ -37,8 +37,10 @@ private:
 
     double percentile;
 
+    bool debug;
+
     void parameterDeclaration();
-    
+
     void parameterInitialization();
 };
 

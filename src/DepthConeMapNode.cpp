@@ -1,4 +1,7 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include <ios>
+#include <rclcpp/logging.hpp>
+#include <sstream>
 
 
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions &options) : Node("depth_cone_map", options) {
@@ -26,7 +29,37 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
     const auto cones = image_processor->coneFinder(messages, bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
+    if(debug){
+        std::ostringstream ss;
+        ss<<"JSON parsed: [\n";
+        for (const auto& point : bounding_boxes_list) {
+            ss<<point.first<<", "<<point.second<<"\n";
+        }
+        ss<<"]";
+        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+        ss.str("");
+        ss.clear();
+
+        ss<<"Cones in camera frame: [\n";
+        for (const auto& cone_camera : cones) {
+            ss<<cone_camera<<"\n";
+        }
+        ss<<"]";
+        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+        ss.str("");
+        ss.clear();
+
+        ss<<"Cones in world frame, size "<<marker_array_cones.markers.size()<<": [\n";
+        for(const auto& cone_world : marker_array_cones.markers){
+            ss<<"["<<cone_world.pose.position.x<<","<<cone_world.pose.position.y<<", "<<cone_world.pose.position.z<<"],";
+        }
+        ss.seekp(-1, std::ios_base::end); //mi cancella l'ultima virgola
+        ss<<"]";
+        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+
+    }
     ros_handler->publish_cones(std::move(marker_array_cones));
+
 }
 
 void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr &camera_info){
@@ -37,10 +70,12 @@ void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("camera_frame", "zed_left_camera_frame_optical");
     this->declare_parameter("percentile", 0.2);
+    this->declare_parameter("debug", false);
 }
 void DepthConeMapNode::parameterInitialization() {
     map_frame_name = this->get_parameter("world_frame").as_string();
     camera_frame_name = this->get_parameter("camera_frame").as_string();
     percentile = this->get_parameter("percentile").as_double();
+    debug = this->get_parameter("debug").as_bool();
 }
 RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);

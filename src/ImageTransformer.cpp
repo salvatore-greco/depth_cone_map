@@ -18,7 +18,7 @@ driverless_msgs::msg::MarkerArrayStamped ImageTransformer::cameraToWorld(const s
         //tf2_buffer->transform(point_to_transform, point_trasformed, "map");
         //se questa non funziona da tf2_geometry_msgs:
         tf2::doTransform<geometry_msgs::msg::Point>(point_to_transform, point_trasformed, transformation);
-        std::cout<<"["<<point_trasformed.x<<","<<point_trasformed.y<<","<<point_trasformed.z<<"]"<<std::endl;
+        //std::cout<<"["<<point_trasformed.x<<","<<point_trasformed.y<<","<<point_trasformed.z<<"]"<<std::endl;
         visualization_msgs::msg::Marker marker;
         //copiando come viene fatto da clustering_node
         marker.type = marker.CYLINDER;
