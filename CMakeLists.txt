@@ -38,6 +38,7 @@ FetchContent_MakeAvailable(simdjson)
 
 add_library(image_processor src/ImageProcessor.cpp)
 add_library(subscriber src/RosHandler.cpp)
+add_library(image_transformer src/ImageTransformer.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_nodes(node_composition "DepthConeMapNode")
@@ -58,6 +59,10 @@ target_include_directories(subscriber PUBLIC
 )
 
 target_include_directories(node_composition PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+target_include_directories(image_transformer PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
@@ -89,7 +94,19 @@ ament_target_dependencies(subscriber PUBLIC
         rclcpp_components
         cv_bridge
 )
-target_link_libraries(node_composition PUBLIC simdjson subscriber image_processor)
+ament_target_dependencies(image_transformer PUBLIC
+        rclcpp
+        driverless_msgs
+        geometry_msgs
+        sensor_msgs
+        cv_bridge
+        OpenCV
+        driverless_msgs
+        tf2
+        tf2_ros
+        tf2_geometry_msgs 
+)
+target_link_libraries(node_composition PUBLIC simdjson subscriber image_processor image_transformer)
 ament_target_dependencies(node_composition PUBLIC
         rclcpp
         rclcpp_components

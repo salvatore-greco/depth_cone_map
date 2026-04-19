@@ -1,6 +1,6 @@
 #include "depth_cone_map/ImageProcessor.hpp"
 
-#include <rclcpp/logging.hpp>
+
 
 std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const MessageContainer &messages) {
     /* JSON structure
@@ -31,7 +31,7 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
                 cv::Point(bottom_right_x, bottom_right_y));
         }
     } catch (const simdjson::simdjson_error &e) {
-        RCLCPP_ERROR(rclcpp::get_logger("depth_cone_map"),
+        RCLCPP_ERROR(logger,
                      "An error occurred while parsing bounding boxes JSON %s, error code %d", e.what(), e.error());
         //error is an enum, check https://simdjson.github.io/simdjson/structsimdjson_1_1simdjson__error.html
     }
@@ -42,8 +42,15 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
 std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &messages,
                                                     const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
     const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getImage();
-    const cv_bridge::CvImageConstPtr image_converted = cv_bridge::toCvShare(image, image->encoding);
-    const cv::Mat cvImage = image_converted->image;
+    cv_bridge::CvImageConstPtr image_converted;
+    cv::Mat cvImage;
+    try{
+    image_converted = cv_bridge::toCvShare(image, image->encoding);
+    cvImage = image_converted->image;
+    }
+    catch(const cv_bridge::Exception& e){
+        RCLCPP_ERROR(logger, "[cv_bridge] Error when converting sensor_msgs::msg::Image to cv::Mat: %s", e.what());
+    }
     static int i = 0;
 
     std::vector<cv::Point3f> cones;
@@ -54,7 +61,7 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
         auto perc_it = roi_image.begin<float>() + percentile;
         std::nth_element(roi_image.begin<float>(), perc_it, roi_image.end<float>());
         const float cone_distance = *perc_it;
-        if (cone_distance == 0 || isnan(cone_distance) || isinf(cone_distance))
+        if (isDepthValueInvalid(cone_distance))
             continue;
         const int x = (roi_image.cols / 2) + bounding_box.first.x;
         const int y = roi_image.rows - roi_image.rows * 0.3 + bounding_box.first.y;
@@ -66,58 +73,15 @@ std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &mess
     return cones;
 }
 
-driverless_msgs::msg::MarkerArrayStamped ImageProcessor::cameraToWorld(const std::vector<cv::Point3f> &cones) {
-    //FIXME: quando farai il launch metti questi parametri là (remap o semplice param)
-    //TODO: assumendo che ce la faccia a trasformare fra un frame e l'altro uso tf2::TimePointZero. In caso non sia così c'è da ripensare come messageContainer viene gestito
-    //Magari usando uno shared ptr o roba simile? Cambia ad ogni callback
-    std::vector<visualization_msgs::msg::Marker> markers;
-    geometry_msgs::msg::TransformStamped transformation;
-    try {
-        transformation = tf2_buffer->lookupTransform(
-            "map", "zed_left_camera_optical_frame", tf2::TimePointZero);
-    }
-    catch (const tf2::LookupException& e) {
-        RCLCPP_ERROR(rclcpp::get_logger("depth_cone_map"), "Error when looking up transform %s", e.what());
-    }
-    for (const auto &cone: cones) {
-        //marker non ha le funzioni per la trasformazione
-        geometry_msgs::msg::Point point_to_transform = cvPoint3fToGeometryMsgsPoint(cone);
-        geometry_msgs::msg::Point point_trasformed;
-        //tf2_buffer->transform(point_to_transform, point_trasformed, "map");
-        //se questa non funziona da tf2_geometry_msgs:
-        tf2::doTransform<geometry_msgs::msg::Point>(point_to_transform, point_trasformed, transformation);
-        std::cout<<"["<<point_trasformed.x<<","<<point_trasformed.y<<","<<point_trasformed.z<<"]"<<std::endl;
-        visualization_msgs::msg::Marker marker;
-        //copiando come viene fatto da clustering_node
-        marker.type = marker.CYLINDER;
-        marker.header.frame_id = "map";
-        marker.scale.x = 0.5;
-        marker.scale.y = 0.5;
-        marker.scale.z = 0.7;
-        marker.pose.position.x = point_trasformed.x;
-        marker.pose.position.y = point_trasformed.y;
-        marker.pose.position.z = point_trasformed.z;
-        marker.pose.orientation.w = 1.0;
-        marker.pose.orientation.y = 0.0;
-        marker.pose.orientation.x = 0.0;
-        marker.pose.orientation.z = 0.0;
-        markers.push_back(std::move(marker));
-    }
-    driverless_msgs::msg::MarkerArrayStamped marker_array_stamped;
-    marker_array_stamped.markers = markers;
-    return marker_array_stamped;
-}
 
 cv::Mat ImageProcessor::backProjection(cv::Vec3d pixel, float depth) {
     cv::Mat result = depth*k_matrix.inv()*pixel;
     return result;
 }
 
-geometry_msgs::msg::Point ImageProcessor::cvPoint3fToGeometryMsgsPoint(cv::Point3f point) {
-    //geometry_msgs/Point non ha il costruttore, assurdo lo so
-    geometry_msgs::msg::Point geometry_msgs_point;
-    geometry_msgs_point.x = point.x;
-    geometry_msgs_point.y = point.y;
-    geometry_msgs_point.z = point.z;
-    return geometry_msgs_point;
+bool ImageProcessor::isDepthValueInvalid(const float& value) const{
+    return (value == 0 || std::isnan(value) || std::isinf(value));
 }
+
+
+

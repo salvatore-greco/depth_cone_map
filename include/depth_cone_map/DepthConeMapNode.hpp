@@ -8,9 +8,13 @@
 #include "driverless_msgs/msg/pose_stamped.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "MessageContainer.hpp"
-#include "ImageProcessor.hpp"
 #include "tf2_ros/buffer.h"
+#include <memory>
+#include "ImageProcessor.hpp"
+#include "ImageTransformer.hpp"
 
+class ImageProcessor;
+class ImageTransformer;
 class DepthConeMapNode : public rclcpp::Node {
 public:
     explicit DepthConeMapNode(const rclcpp::NodeOptions& options);
@@ -20,7 +24,9 @@ public:
 private:
     std::unique_ptr<RosHandler> ros_handler;
     std::unique_ptr<ImageProcessor> image_processor;
-    //std::unique_ptr<CameraToWorld> camera_to_world;
+    std::unique_ptr<ImageTransformer> image_transformer;
+
+    void parameterDeclaration();
 };
 
 #endif
