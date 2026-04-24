@@ -23,7 +23,7 @@ public:
 
     std::list<std::pair<cv::Point, cv::Point>> getBBInJSON(const MessageContainer &messages);
 
-    std::vector<cv::Point3f> coneFinder(const MessageContainer &messages,
+    std::vector<cv::Point3f> getConeInCameraFrame(const MessageContainer &messages,
                                         const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
 
     inline void saveKMatrixAsCvMat(const std::array<double,9>& k_array){

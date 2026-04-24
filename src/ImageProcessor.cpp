@@ -35,9 +35,9 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
 }
 
 
-std::vector<cv::Point3f> ImageProcessor::coneFinder(const MessageContainer &messages,
+std::vector<cv::Point3f> ImageProcessor::getConeInCameraFrame(const MessageContainer &messages,
                                                     const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
-    const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getImage();
+    const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getDepthImage();
     cv_bridge::CvImageConstPtr image_converted;
     cv::Mat cvImage;
     try{

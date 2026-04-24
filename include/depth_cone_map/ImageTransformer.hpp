@@ -24,10 +24,12 @@ public:
 
         driverless_msgs::msg::MarkerArrayStamped cameraToWorld(const std::vector<cv::Point3f> &cones);
         
-        geometry_msgs::msg::Point cvPoint3fToGeometryMsgsPoint(cv::Point3f point);
 
 
 private:
+    geometry_msgs::msg::Point cvPoint3fToGeometryMsgsPoint(cv::Point3f point);
+
+
     rclcpp::Clock::SharedPtr clock;
     std::string map_frame_name;
     std::string camera_frame_name;

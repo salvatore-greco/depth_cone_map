@@ -27,7 +27,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
     
     const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
-    const auto cones = image_processor->coneFinder(messages, bounding_boxes_list);
+    const auto cones = image_processor->getConeInCameraFrame(messages, bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
     if(debug){
         std::ostringstream ss;

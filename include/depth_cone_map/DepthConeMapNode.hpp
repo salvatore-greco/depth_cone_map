@@ -14,8 +14,6 @@
 #include "ImageProcessor.hpp"
 #include "ImageTransformer.hpp"
 
-class ImageProcessor;
-class ImageTransformer;
 class DepthConeMapNode : public rclcpp::Node {
 public:
     explicit DepthConeMapNode(const rclcpp::NodeOptions& options);
