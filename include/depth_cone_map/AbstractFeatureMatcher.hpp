@@ -1,0 +1,8 @@
+#ifndef ABSTRACTFEATUREMATCHER_HPP
+#define ABSTRACTFEATUREMATCHER_HPP
+
+class AbstractFeatureMatcher{
+
+};
+
+#endif // ABSTRACTFEATUREMATCHER_HPP
