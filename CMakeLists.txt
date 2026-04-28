@@ -130,7 +130,7 @@ ament_target_dependencies(node_composition PUBLIC
         tf2_ros
         tf2_geometry_msgs
 )
-target_link_libraries(super_point_glue PUBLIC superpointglue_lib)
+target_link_libraries(super_point_glue PUBLIC superpointglue_lib rclcpp::rclcpp)
 set_target_properties(superpointglue_lib PROPERTIES
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
     $<TARGET_PROPERTY:superpointglue_lib,INTERFACE_INCLUDE_DIRECTORIES>
