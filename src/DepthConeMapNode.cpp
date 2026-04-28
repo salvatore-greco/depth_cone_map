@@ -24,7 +24,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
                                 const sensor_msgs::msg::Image::ConstSharedPtr &depth_image,
                                 const driverless_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose) {
     RCLCPP_INFO(this->get_logger(), "Received messages");
-    const MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
+    MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
     
     const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
     const auto cones = image_processor->getConeInCameraFrame(messages, bounding_boxes_list);

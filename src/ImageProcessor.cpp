@@ -3,7 +3,7 @@
 
 //TODO: salvarsi colore e fare una struct (o una classe) Cone.
 
-std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const MessageContainer &messages) {
+std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(MessageContainer &messages) {
     /* JSON structure
      * [{"color": "color_string", "BB": [[x_l, y_l],[x_r, y_r]]}, ... ]
      * dove x_l, y_l sono le coordinate del punto top left; x_r, y_r le coordinate del punto bottom right
@@ -35,7 +35,7 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(const Me
 }
 
 
-std::vector<cv::Point3f> ImageProcessor::getConeInCameraFrame(const MessageContainer &messages,
+std::vector<cv::Point3f> ImageProcessor::getConeInCameraFrame(MessageContainer &messages,
                                                     const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
     const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getDepthImage();
     cv_bridge::CvImageConstPtr image_converted;
