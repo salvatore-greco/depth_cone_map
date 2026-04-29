@@ -45,8 +45,6 @@ public:
         keyframe_handler->saveKeyframe(current_image);
     }
 
-    //si può rendere thread safe e farlo parte di una classe
-    // metodi per salvare tutti i messaggi, getter dei messaggi tutto thread safe. (basta un mutex o un lock)
 private:
     std::shared_ptr<const driverless_msgs::msg::BoundingBoxes> bb;
     std::shared_ptr<const sensor_msgs::msg::Image> depth;
