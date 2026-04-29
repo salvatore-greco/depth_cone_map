@@ -1,11 +1,11 @@
 #ifndef KEYFRAMESTRATEGY_HPP
 #define KEYFRAMESTRATEGY_HPP
 
-#include "sensor_msgs/msg/image.hpp"
+#include <opencv2/core/mat.hpp>
 
 class AbstractKeyframeStrategy{
 public:
-    virtual void saveKeyframe(sensor_msgs::msg::Image image) = 0;
+    virtual bool isKeyframeInvalid() = 0;
 };
 
 #endif // KEYFRAMESTRATEGY_HPP

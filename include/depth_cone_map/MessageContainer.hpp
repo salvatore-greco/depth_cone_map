@@ -6,6 +6,7 @@
 #include <mutex>
 #include <utility>
 
+#include "depth_cone_map/KeyframeHandler.hpp"
 #include "depth_cone_map/KeyframeStrategy.hpp"
 #include "driverless_msgs/msg/pose_stamped.hpp"
 #include "driverless_msgs/msg/bounding_boxes.hpp"
@@ -37,14 +38,11 @@ public:
     }
 
     void saveMessages(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb, sensor_msgs::msg::Image::ConstSharedPtr depth, sensor_msgs::msg::Image::ConstSharedPtr current_image){
-        {
-            const std::lock_guard<std::mutex> lock(this->mutex);
-            this->bb = std::move(bb);
-            this->depth = std::move(depth);
-            this->previous_image = this->current_image;
-            this->current_image = std::move(current_image);
-        }
-        keyframe_strategy->saveKeyframe(*(this->current_image));
+        const std::lock_guard<std::mutex> lock(this->mutex);
+        this->bb = std::move(bb);
+        this->depth = std::move(depth);
+        this->current_image = std::move(current_image);
+        keyframe_handler->saveKeyframe(current_image);
     }
 
     //si può rendere thread safe e farlo parte di una classe
@@ -56,10 +54,7 @@ private:
     driverless_msgs::msg::PoseStamped::ConstSharedPtr pose;
 
     std::shared_ptr<const sensor_msgs::msg::Image> current_image;
-    std::shared_ptr<const sensor_msgs::msg::Image> previous_image;
-    std::shared_ptr<const sensor_msgs::msg::Image> keyframe;
-
-    std::unique_ptr<AbstractKeyframeStrategy> keyframe_strategy;
+    std::unique_ptr<KeyframeHandler> keyframe_handler;
 
     std::mutex mutex;
     
