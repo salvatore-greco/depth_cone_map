@@ -37,12 +37,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(simdjson)
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/SuperPoint-SuperGlue-TensorRT-v2)
 
-
-
-add_library(image_processor src/ImageProcessor.cpp)
-add_library(subscriber src/RosHandler.cpp)
-add_library(image_transformer src/ImageTransformer.cpp)
 add_library(super_point_glue SHARED src/SuperPointFeatureExtractor.cpp src/SuperGlueFeatureMatcher.cpp)
+add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp) 
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_nodes(node_composition "DepthConeMapNode")
@@ -53,20 +49,11 @@ ament_export_dependencies(
 )
 
 # Include directory
-target_include_directories(image_processor PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-target_include_directories(subscriber PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-
 target_include_directories(node_composition PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-target_include_directories(image_transformer PUBLIC
+target_include_directories(source PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
@@ -81,32 +68,8 @@ target_include_directories(super_point_glue PUBLIC
         ${YAML_CPP_INCLUDE_DIR}
 
 )
-target_link_libraries(image_processor PUBLIC simdjson)
-ament_target_dependencies(image_processor PUBLIC
-        rclcpp
-        sensor_msgs
-        cv_bridge
-        OpenCV
-        driverless_msgs
-        sensor_msgs
-        geometry_msgs
-)
-
-target_link_libraries(subscriber PUBLIC simdjson)
-ament_target_dependencies(subscriber PUBLIC
-        rclcpp
-        driverless_msgs
-        sensor_msgs
-        visualization_msgs
-        geometry_msgs
-        tf2
-        tf2_ros
-        tf2_geometry_msgs
-        message_filters
-        rclcpp_components
-        cv_bridge
-)
-ament_target_dependencies(image_transformer PUBLIC
+target_link_libraries(source PUBLIC simdjson)
+ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
         geometry_msgs
@@ -116,8 +79,11 @@ ament_target_dependencies(image_transformer PUBLIC
         tf2
         tf2_ros
         tf2_geometry_msgs 
+        message_filters
+        rclcpp_components
 )
-target_link_libraries(node_composition PUBLIC simdjson subscriber image_processor image_transformer)
+
+target_link_libraries(node_composition PUBLIC simdjson source)
 ament_target_dependencies(node_composition PUBLIC
         rclcpp
         rclcpp_components
