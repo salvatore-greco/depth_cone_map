@@ -1,5 +1,7 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include "depth_cone_map/MessageContainer.hpp"
 #include <ios>
+#include <memory>
 #include <rclcpp/logging.hpp>
 #include <sstream>
 
@@ -7,6 +9,7 @@
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions &options) : Node("depth_cone_map", options) {
     parameterDeclaration();
     parameterInitialization();
+    message_container = std::make_shared<MessageContainer>();
     ros_handler = std::make_unique<RosHandler>(this, *this);
     image_processor = std::make_unique<ImageProcessor>(
         this->get_logger(), 
@@ -30,33 +33,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto cones = image_processor->getConeInCameraFrame(messages, bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
     if(debug){
-        std::ostringstream ss;
-        ss<<"JSON parsed: [\n";
-        for (const auto& point : bounding_boxes_list) {
-            ss<<point.first<<", "<<point.second<<"\n";
-        }
-        ss<<"]";
-        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
-        ss.str("");
-        ss.clear();
-
-        ss<<"Cones in camera frame: [\n";
-        for (const auto& cone_camera : cones) {
-            ss<<cone_camera<<"\n";
-        }
-        ss<<"]";
-        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
-        ss.str("");
-        ss.clear();
-
-        ss<<"Cones in world frame, size "<<marker_array_cones.markers.size()<<": [\n";
-        for(const auto& cone_world : marker_array_cones.markers){
-            ss<<"["<<cone_world.pose.position.x<<","<<cone_world.pose.position.y<<", "<<cone_world.pose.position.z<<"],";
-        }
-        ss.seekp(-1, std::ios_base::end); //mi cancella l'ultima virgola
-        ss<<"]";
-        RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
-
+        printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
     }
     ros_handler->publish_cones(std::move(marker_array_cones));
 
@@ -78,4 +55,33 @@ void DepthConeMapNode::parameterInitialization() {
     percentile = this->get_parameter("percentile").as_double();
     debug = this->get_parameter("debug").as_bool();
 }
+void DepthConeMapNode::printDebug(std::list<std::pair<cv::Point, cv::Point>> bounding_boxes_list, std::vector<cv::Point3f> cones, std::vector<visualization_msgs::msg::Marker> marker_array_cones){
+    std::ostringstream ss;
+    ss<<"JSON parsed: [\n";
+    for (const auto& point : bounding_boxes_list) {
+        ss<<point.first<<", "<<point.second<<"\n";
+    }
+    ss<<"]";
+    RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+    ss.str("");
+    ss.clear();
+
+    ss<<"Cones in camera frame: [\n";
+    for (const auto& cone_camera : cones) {
+        ss<<cone_camera<<"\n";
+    }
+    ss<<"]";
+    RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+    ss.str("");
+    ss.clear();
+
+    ss<<"Cones in world frame, size "<<marker_array_cones.size()<<": [\n";
+    for(const auto& cone_world : marker_array_cones){
+        ss<<"["<<cone_world.pose.position.x<<","<<cone_world.pose.position.y<<", "<<cone_world.pose.position.z<<"],";
+    }
+    ss.seekp(-1, std::ios_base::end); //mi cancella l'ultima virgola
+    ss<<"]";
+    RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+}
+
 RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);

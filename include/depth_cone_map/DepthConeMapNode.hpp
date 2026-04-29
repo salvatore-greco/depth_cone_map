@@ -10,7 +10,10 @@
 #include "MessageContainer.hpp"
 #include "tf2_ros/buffer.h"
 #include <memory>
+#include <opencv2/core/types.hpp>
 #include <string>
+#include <vector>
+#include <visualization_msgs/msg/detail/marker__struct.hpp>
 #include "ImageProcessor.hpp"
 #include "ImageTransformer.hpp"
 
@@ -28,6 +31,8 @@ private:
 
     std::unique_ptr<ImageTransformer> image_transformer;
 
+    std::shared_ptr<MessageContainer> message_container;
+
     //ROS parameter from launch file
     std::string map_frame_name;
 
@@ -40,6 +45,8 @@ private:
     void parameterDeclaration();
 
     void parameterInitialization();
+
+    void printDebug(std::list<std::pair<cv::Point, cv::Point>> bounding_boxes_list, std::vector<cv::Point3f> cones, std::vector<visualization_msgs::msg::Marker> marker_array_cones);
 };
 
 #endif
