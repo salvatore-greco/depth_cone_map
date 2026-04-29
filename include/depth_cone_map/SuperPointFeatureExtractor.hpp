@@ -7,10 +7,12 @@
 #include <string>
 #include <Eigen/Core>
 #include <rclcpp/logger.hpp>
+#include <utility>
+#include "Exceptions.hpp"
 
 class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix<double, 259, Eigen::Dynamic>>{
     public:
-    SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, rclcpp::Logger logger);
+    SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger);
     
     Eigen::Matrix<double, 259, Eigen::Dynamic> getFeatureInBB(cv::Mat image, const std::list<std::pair<cv::Point, cv::Point>>& bb) override;
 
@@ -19,9 +21,12 @@ class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix
     
     private:
     Configs superpoint_config;
+
     std::unique_ptr<SuperPoint> superpoint;
 
     rclcpp::Logger logger;
+
+    bool isInside(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const;
 };
 
 #endif // SUPERPOINTFEATUREEXTRACTOR_HPP
