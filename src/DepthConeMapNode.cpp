@@ -12,13 +12,13 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions &options) : Node("d
     message_container = std::make_shared<MessageContainer>();
     ros_handler = std::make_unique<RosHandler>(this, *this);
     image_processor = std::make_unique<ImageProcessor>(
-        this->get_logger(), 
+        this->get_logger(),
         this->percentile
     );
     image_transformer = std::make_unique<ImageTransformer>(
-        this->get_clock(), 
-        this->map_frame_name, 
-        this->camera_frame_name, 
+        this->get_clock(),
+        this->map_frame_name,
+        this->camera_frame_name,
         this->get_logger()
     );
 }
@@ -28,7 +28,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
                                 const driverless_msgs::msg::PoseStamped::ConstSharedPtr &camera_pose) {
     RCLCPP_INFO(this->get_logger(), "Received messages");
     MessageContainer messages = MessageContainer(bounding_boxes, depth_image, camera_pose);
-    
+
     const auto bounding_boxes_list = image_processor->getBBInJSON(messages);
     const auto cones = image_processor->getConeInCameraFrame(messages, bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
@@ -55,7 +55,7 @@ void DepthConeMapNode::parameterInitialization() {
     percentile = this->get_parameter("percentile").as_double();
     debug = this->get_parameter("debug").as_bool();
 }
-void DepthConeMapNode::printDebug(std::list<std::pair<cv::Point, cv::Point>> bounding_boxes_list, std::vector<cv::Point3f> cones, std::vector<visualization_msgs::msg::Marker> marker_array_cones){
+void DepthConeMapNode::printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list, const std::vector<cv::Point3f>& cones, const std::vector<visualization_msgs::msg::Marker>& marker_array_cones){
     std::ostringstream ss;
     ss<<"JSON parsed: [\n";
     for (const auto& point : bounding_boxes_list) {
