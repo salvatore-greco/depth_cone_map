@@ -1,5 +1,5 @@
 #ifndef DEPTHCONEMAPNODE_DEFINE
-#define DEPTHCONEMAPNODE_DEFINE 
+#define DEPTHCONEMAPNODE_DEFINE
 
 #include "RosHandler.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -46,7 +46,7 @@ private:
 
     void parameterInitialization();
 
-    void printDebug(std::list<std::pair<cv::Point, cv::Point>> bounding_boxes_list, std::vector<cv::Point3f> cones, std::vector<visualization_msgs::msg::Marker> marker_array_cones);
+    void printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list, const std::vector<cv::Point3f>& cones, const std::vector<visualization_msgs::msg::Marker>& marker_array_cones);
 };
 
 #endif
