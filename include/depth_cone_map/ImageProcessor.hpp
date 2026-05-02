@@ -15,16 +15,16 @@
 class ImageProcessor {
 
 public:
-    ImageProcessor(const rclcpp::Logger& logger, const float& percentile): 
+    ImageProcessor(const rclcpp::Logger& logger, const float& percentile, std::shared_ptr<MessageContainer> message_container):
         PERCENTILE(percentile),
         k_matrix(3,3,CV_64FC1),
-        logger(logger)
+        logger(logger),
+        message_container(message_container)
     {};
 
-    std::list<std::pair<cv::Point, cv::Point>> getBBInJSON(MessageContainer &messages);
+    std::list<std::pair<cv::Point, cv::Point>> getBBInJSON();
 
-    std::vector<cv::Point3f> getConeInCameraFrame(MessageContainer &messages,
-                                        const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
+    std::vector<cv::Point3f> getConeInCameraFrame(const std::list<std::pair<cv::Point, cv::Point> > &bb_points);
 
     inline void saveKMatrixAsCvMat(const std::array<double,9>& k_array){
         std::memcpy(k_matrix.data, k_array.data(), k_array.size()*sizeof(double));
@@ -39,6 +39,8 @@ private:
     cv::Mat k_matrix;
 
     rclcpp::Logger logger;
+
+    std::shared_ptr<MessageContainer> message_container;
 
     bool isDepthValueInvalid(const float& value) const;
 

@@ -11,10 +11,12 @@
 #include "message_filters/synchronizer.hpp"
 #include "message_filters/sync_policies/approximate_time.hpp"
 #include <memory>
+#include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
 #include <rclcpp/qos.hpp>
 #include <functional>
+#include <sensor_msgs/msg/detail/image__struct.hpp>
 
 
 
@@ -32,18 +34,18 @@ class RosHandler{
 
         message_filters::Subscriber<sensor_msgs::msg::Image> depth_sub;
 
-        message_filters::Subscriber<driverless_msgs::msg::PoseStamped> pose_sub;
+        message_filters::Subscriber<sensor_msgs::msg::Image> image_left_sub;
 
         rclcpp::Publisher<driverless_msgs::msg::MarkerArrayStamped>::SharedPtr cone_pub;
 
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub;
 
         rclcpp::QoS qos; //TODO: fai matchare col qos degli altri 3 messaggi che devi sincronizzare
-        
+
         std::shared_ptr<message_filters::Synchronizer<message_filters::sync_policies::ApproximateTime<
             driverless_msgs::msg::BoundingBoxes,
             sensor_msgs::msg::Image,
-            driverless_msgs::msg::PoseStamped>>> sync;
+            sensor_msgs::msg::Image>>> sync;
 
         rclcpp::Node* node_ptr;
 
