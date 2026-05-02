@@ -1,6 +1,10 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include <iostream>
+#include <memory>
 
 #include "depth_cone_map/MessageContainer.hpp"
+#include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
+#include "depth_cone_map/SuperPointFeatureExtractor.hpp"
 
 // TODO: togliere pose che tanto non serve e usare message container come membro delle classi
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options) {
@@ -11,6 +15,9 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     image_processor = std::make_unique<ImageProcessor>(this->get_logger(), this->percentile, message_container);
     image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
                                                            this->camera_frame_name, this->get_logger());
+    std::cout<<superpointglue_config<<", "<<superpointglue_weight<<std::endl;
+    superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger());
+    superpoint = std::make_unique<SuperPointFeatureExtractor>(superpointglue_config, superpointglue_weight, this->get_logger());
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes,
@@ -18,7 +25,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
                                 const sensor_msgs::msg::Image::ConstSharedPtr& image_left) {
     RCLCPP_INFO(this->get_logger(), "Received messages");
     this->message_container->saveMessages(bounding_boxes, depth_image, image_left);
-    RCLCPP_INFO(this->get_logger(), "after saving messages");
+
     const auto bounding_boxes_list = image_processor->getBBInJSON();
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
@@ -38,6 +45,8 @@ void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("camera_frame", "zed_left_camera_optical_frame");
     this->declare_parameter("percentile", 0.2);
     this->declare_parameter("debug", false);
+    this->declare_parameter("superpointglue_config", "/");
+    this->declare_parameter("superpointglue_weights", "/");
 }
 
 void DepthConeMapNode::parameterInitialization() {
@@ -45,6 +54,8 @@ void DepthConeMapNode::parameterInitialization() {
     camera_frame_name = this->get_parameter("camera_frame").as_string();
     percentile = this->get_parameter("percentile").as_double();
     debug = this->get_parameter("debug").as_bool();
+    superpointglue_config = this->get_parameter("superpointglue_config").as_string();
+    superpointglue_weight = this->get_parameter("superpointglue_weights").as_string();
 }
 
 void DepthConeMapNode::printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list,

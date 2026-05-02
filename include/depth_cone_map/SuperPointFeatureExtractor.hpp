@@ -13,12 +13,12 @@
 class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix<double, 259, Eigen::Dynamic>>{
     public:
     SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger);
-    
+
     Eigen::Matrix<double, 259, Eigen::Dynamic> getFeatureInBB(cv::Mat image, const std::list<std::pair<cv::Point, cv::Point>>& bb) override;
 
     protected:
     Eigen::Matrix<double, 259, Eigen::Dynamic> extractFeature(cv::Mat image) override;
-    
+
     private:
     Configs superpoint_config;
 
@@ -26,7 +26,7 @@ class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix
 
     rclcpp::Logger logger;
 
-    bool isInside(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const;
+    bool isInsideBoundingBox(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const;
 };
 
 #endif // SUPERPOINTFEATUREEXTRACTOR_HPP

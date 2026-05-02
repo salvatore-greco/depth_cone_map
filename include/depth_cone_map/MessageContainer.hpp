@@ -50,7 +50,7 @@ private:
     //sensor_msgs::msg::Image::ConstSharedPtr depth;
 
     std::shared_ptr<const sensor_msgs::msg::Image> current_image;
-    std::unique_ptr<KeyframeHandler> keyframe_handler;
+    std::shared_ptr<KeyframeHandler> keyframe_handler;
 
     std::mutex mutex;
 

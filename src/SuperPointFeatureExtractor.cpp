@@ -3,8 +3,8 @@
 #include <Eigen/src/Core/util/Constants.h>
 #include <rclcpp/logging.hpp>
 
-SuperPointFeatureExtractor::SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger): 
-        superpoint_config(config_path, weight_path), 
+SuperPointFeatureExtractor::SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger):
+        superpoint_config(config_path, weight_path),
         superpoint(std::make_unique<SuperPoint>(superpoint_config.superpoint_config)),
         logger(logger)
         {
@@ -24,7 +24,7 @@ Eigen::Matrix<double, 259, Eigen::Dynamic> SuperPointFeatureExtractor::getFeatur
     //TODO: controlla se è troppo lento
     for(const auto& bounding_box : bb){
         for(int i=0; i<features.cols(); i++){
-            if(isInside(features(1,i), features(2,i), bounding_box))
+            if(isInsideBoundingBox(features(1,i), features(2,i), bounding_box))
                 indexes.push_back(i);
         }
     }
@@ -42,8 +42,6 @@ Eigen::Matrix<double, 259, Eigen::Dynamic> SuperPointFeatureExtractor::extractFe
     return features;
 }
 
-bool SuperPointFeatureExtractor::isInside(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const{
+bool SuperPointFeatureExtractor::isInsideBoundingBox(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const{
     return (x>bb.first.x) && (x<bb.second.x) && (y>bb.first.y) && (y<bb.second.y);
 }
-
-

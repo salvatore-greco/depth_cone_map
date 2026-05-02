@@ -2,6 +2,9 @@
 #define DEPTHCONEMAPNODE_DEFINE
 
 #include "RosHandler.hpp"
+#include "depth_cone_map/Cone.hpp"
+#include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
+#include "depth_cone_map/SuperPointFeatureExtractor.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "driverless_msgs/msg/bounding_boxes.hpp"
@@ -38,6 +41,9 @@ private:
 
     std::shared_ptr<MessageContainer> message_container;
 
+    std::unique_ptr<SuperPointFeatureExtractor> superpoint;
+    std::unique_ptr<SuperGlueFeatureMatcher> superglue;
+
     //ROS parameter from launch file
     std::string map_frame_name;
 
@@ -46,6 +52,10 @@ private:
     double percentile;
 
     bool debug;
+
+    std::string superpointglue_config;
+
+    std::string superpointglue_weight;
 
     void parameterDeclaration();
 
