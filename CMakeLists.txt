@@ -79,6 +79,7 @@ ament_target_dependencies(node_composition PUBLIC
         driverless_msgs
         geometry_msgs
         sensor_msgs
+        visualization_msgs
         cv_bridge
         tf2
         tf2_ros
