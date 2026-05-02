@@ -41,7 +41,10 @@ add_library(super_point_glue SHARED src/SuperPointFeatureExtractor.cpp src/Super
 add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
-rclcpp_components_register_nodes(node_composition "DepthConeMapNode")
+rclcpp_components_register_node(
+  node_composition
+ PLUGIN "DepthConeMapNode"
+ EXECUTABLE node_executable)
 
 ament_export_dependencies(
         rclcpp
@@ -103,6 +106,9 @@ set_target_properties(superpointglue_lib PROPERTIES
     $<TARGET_PROPERTY:superpointglue_lib,INTERFACE_INCLUDE_DIRECTORIES>
 ) #per rimuovere tutti i warning di superpointglue_lib
 
+# add_executable(node_executable src/main.cpp)
+# target_link_libraries(node_executable PUBLIC simdjson node_composition source)
+
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -126,5 +132,9 @@ install(DIRECTORY
 install(DIRECTORY
   config
   DESTINATION share/${PROJECT_NAME}
+)
+install(TARGETS
+  node_executable
+  DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()
