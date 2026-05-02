@@ -35,7 +35,7 @@ void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::Co
 
 void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("world_frame", "map");
-    this->declare_parameter("camera_frame", "zed_left_camera_frame_optical");
+    this->declare_parameter("camera_frame", "zed_left_camera_optical_frame");
     this->declare_parameter("percentile", 0.2);
     this->declare_parameter("debug", false);
 }
@@ -80,3 +80,11 @@ void DepthConeMapNode::printDebug(const std::list<std::pair<cv::Point, cv::Point
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(DepthConeMapNode);
+
+int main(int argc, char ** argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<DepthConeMapNode>(rclcpp::NodeOptions());
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}
