@@ -71,7 +71,7 @@ target_include_directories(super_point_glue PUBLIC
         ${YAML_CPP_INCLUDE_DIR}
 
 )
-target_link_libraries(source PUBLIC simdjson)
+target_link_libraries(source PUBLIC simdjson super_point_glue)
 ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
@@ -86,7 +86,7 @@ ament_target_dependencies(source PUBLIC
         rclcpp_components
 )
 
-target_link_libraries(node_composition PUBLIC simdjson source)
+target_link_libraries(node_composition PUBLIC simdjson source super_point_glue)
 ament_target_dependencies(node_composition PUBLIC
         rclcpp
         rclcpp_components
@@ -106,8 +106,6 @@ set_target_properties(superpointglue_lib PROPERTIES
     $<TARGET_PROPERTY:superpointglue_lib,INTERFACE_INCLUDE_DIRECTORIES>
 ) #per rimuovere tutti i warning di superpointglue_lib
 
-# add_executable(node_executable src/main.cpp)
-# target_link_libraries(node_executable PUBLIC simdjson node_composition source)
 
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -120,6 +118,7 @@ if (BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif ()
+
 install(TARGETS node_composition
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
@@ -132,6 +131,11 @@ install(DIRECTORY
 install(DIRECTORY
   config
   DESTINATION share/${PROJECT_NAME}
+)
+install(DIRECTORY
+external/SuperPoint-SuperGlue-TensorRT-v2/config
+external/SuperPoint-SuperGlue-TensorRT-v2/weights
+DESTINATION share/${PROJECT_NAME}
 )
 install(TARGETS
   node_executable
