@@ -12,15 +12,14 @@
 #include "driverless_msgs/msg/bounding_boxes.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include <iostream>
 
 class MessageContainer {
 public:
     MessageContainer(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb,
-                     sensor_msgs::msg::Image::ConstSharedPtr depth,
-                     driverless_msgs::msg::PoseStamped::ConstSharedPtr pose)
+                     sensor_msgs::msg::Image::ConstSharedPtr depth)
         : bb(std::move(bb)),
-          depth(std::move(depth)),
-          pose(std::move(pose))
+          depth(std::move(depth))
           {};
 
     MessageContainer() = default;
@@ -42,20 +41,19 @@ public:
         this->bb = std::move(bb);
         this->depth = std::move(depth);
         this->current_image = std::move(current_image);
-        keyframe_handler->saveKeyframe(current_image);
+        // keyframe_handler->saveKeyframe(current_image);
     }
 
 private:
     std::shared_ptr<const driverless_msgs::msg::BoundingBoxes> bb;
     std::shared_ptr<const sensor_msgs::msg::Image> depth;
     //sensor_msgs::msg::Image::ConstSharedPtr depth;
-    driverless_msgs::msg::PoseStamped::ConstSharedPtr pose;
 
     std::shared_ptr<const sensor_msgs::msg::Image> current_image;
     std::unique_ptr<KeyframeHandler> keyframe_handler;
 
     std::mutex mutex;
-    
+
 
 };
 #endif //BUILD_MESSAGECONTAINER_H
