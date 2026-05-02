@@ -7,21 +7,26 @@
 #include "driverless_msgs/msg/bounding_boxes.hpp"
 #include "driverless_msgs/msg/pose_stamped.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 #include "MessageContainer.hpp"
 #include "tf2_ros/buffer.h"
 #include <memory>
 #include <opencv2/core/types.hpp>
 #include <string>
 #include <vector>
-#include <visualization_msgs/msg/detail/marker__struct.hpp>
 #include "ImageProcessor.hpp"
 #include "ImageTransformer.hpp"
+#include "MessageContainer.hpp"
+#include <ios>
+#include <memory>
+#include <rclcpp/logging.hpp>
+#include <sstream>
 
 class DepthConeMapNode : public rclcpp::Node {
 public:
     explicit DepthConeMapNode(const rclcpp::NodeOptions& options);
 
-    void callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& camera_pose);
+    void callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left);
 
     void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& camera_info);
 private:
