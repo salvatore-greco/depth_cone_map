@@ -3,13 +3,13 @@
 
 //TODO: salvarsi colore e fare una struct (o una classe) Cone.
 
-std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(MessageContainer &messages) {
+std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON() {
     /* JSON structure
      * [{"color": "color_string", "BB": [[x_l, y_l],[x_r, y_r]]}, ... ]
      * dove x_l, y_l sono le coordinate del punto top left; x_r, y_r le coordinate del punto bottom right
      */
 
-    auto bb_msg = messages.getBB();
+    auto bb_msg = message_container->getBB();
     //json arriva senza terminazione, richiesta da simdjson.
     simdjson::padded_string json_bb(bb_msg->json);
 
@@ -35,9 +35,8 @@ std::list<std::pair<cv::Point, cv::Point> > ImageProcessor::getBBInJSON(MessageC
 }
 
 
-std::vector<cv::Point3f> ImageProcessor::getConeInCameraFrame(MessageContainer &messages,
-                                                    const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
-    const std::shared_ptr<const sensor_msgs::msg::Image> image = messages.getDepthImage();
+std::vector<cv::Point3f> ImageProcessor::getConeInCameraFrame(const std::list<std::pair<cv::Point, cv::Point> > &bb_points) {
+    const std::shared_ptr<const sensor_msgs::msg::Image> image = message_container->getDepthImage();
     cv_bridge::CvImageConstPtr image_converted;
     cv::Mat cvImage;
     try{
@@ -84,6 +83,3 @@ cv::Point ImageProcessor::extractBoundingBox(simdjson::ondemand::array& bounding
     const int y = static_cast<int>((*(++bounding_box_it)).get_int64());
     return cv::Point(x, y);
 }
-
-
-
