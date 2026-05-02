@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(depth_cone_map)
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif ()
 
 include(FetchContent)
@@ -38,7 +38,7 @@ FetchContent_MakeAvailable(simdjson)
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/SuperPoint-SuperGlue-TensorRT-v2)
 
 add_library(super_point_glue SHARED src/SuperPointFeatureExtractor.cpp src/SuperGlueFeatureMatcher.cpp)
-add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp) 
+add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_nodes(node_composition "DepthConeMapNode")
@@ -78,7 +78,7 @@ ament_target_dependencies(source PUBLIC
         OpenCV
         tf2
         tf2_ros
-        tf2_geometry_msgs 
+        tf2_geometry_msgs
         message_filters
         rclcpp_components
 )
@@ -91,6 +91,7 @@ ament_target_dependencies(node_composition PUBLIC
         driverless_msgs
         geometry_msgs
         sensor_msgs
+        visualization_msgs
         cv_bridge
         tf2
         tf2_ros
@@ -103,15 +104,15 @@ set_target_properties(superpointglue_lib PROPERTIES
 ) #per rimuovere tutti i warning di superpointglue_lib
 
 if (BUILD_TESTING)
-    find_package(ament_lint_auto REQUIRED)
-    # the following line skips the linter which checks for copyrights
-    # comment the line when a copyright and license is added to all source files
-    set(ament_cmake_copyright_FOUND TRUE)
-    # the following line skips cpplint (only works in a git repo)
-    # comment the line when this package is in a git repo and when
-    # a copyright and license is added to all source files
-    set(ament_cmake_cpplint_FOUND TRUE)
-    ament_lint_auto_find_test_dependencies()
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
 endif ()
 install(TARGETS node_composition
         ARCHIVE DESTINATION lib
