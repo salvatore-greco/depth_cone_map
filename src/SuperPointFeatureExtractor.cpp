@@ -8,8 +8,12 @@ SuperPointFeatureExtractor::SuperPointFeatureExtractor(const std::string& config
         superpoint(std::make_unique<SuperPoint>(superpoint_config.superpoint_config)),
         logger(logger)
         {
+            if(!superpoint){
+                RCLCPP_ERROR(logger,"error when instantianting superpoint unique_ptr");
+            }
             RCLCPP_INFO(logger, "Building engine for superpoint, may take a while if first time");
             superpoint->build();
+            RCLCPP_INFO(logger, "Superpoint engine build finished");
         };
 
 Eigen::Matrix<double, 259, Eigen::Dynamic> SuperPointFeatureExtractor::getFeatureInBB(cv::Mat image, const std::list<std::pair<cv::Point, cv::Point>>& bb) {
@@ -31,7 +35,7 @@ Eigen::Matrix<double, 259, Eigen::Dynamic> SuperPointFeatureExtractor::getFeatur
     Eigen::Matrix<double, 259, Eigen::Dynamic> feature_in_bb(259, indexes.size());
     for (size_t i = 0; i<indexes.size(); i++)
         feature_in_bb.col(i) = features.col(indexes[i]);
-    RCLCPP_INFO(logger, "Found %zu feature inside bounding boxes", feature_in_bb.size());
+    RCLCPP_INFO(logger, "Found %zu feature inside bounding boxes", feature_in_bb.cols());
     return feature_in_bb;
 }
 
@@ -42,6 +46,6 @@ Eigen::Matrix<double, 259, Eigen::Dynamic> SuperPointFeatureExtractor::extractFe
     return features;
 }
 
-bool SuperPointFeatureExtractor::isInsideBoundingBox(const double x, const double y, const std::pair<cv::Point, cv::Point>& bb) const{
-    return (x>bb.first.x) && (x<bb.second.x) && (y>bb.first.y) && (y<bb.second.y);
+bool SuperPointFeatureExtractor::isInsideBoundingBox(const double x_feature, const double y_feature, const std::pair<cv::Point, cv::Point>& bb) const{
+    return (x_feature>(bb.first.x/scale_factor_x)) && (x_feature<(bb.second.x / scale_factor_x)) && (y_feature>(bb.first.y / scale_factor_y)) && (y_feature<(bb.second.y/scale_factor_y));
 }

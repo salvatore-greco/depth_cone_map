@@ -6,6 +6,7 @@
 #include <Eigen/src/Core/Matrix.h>
 #include <Eigen/src/Core/util/Constants.h>
 #include <opencv2/core/types.hpp>
+#include <utility>
 #include <vector>
 #include "super_glue.h"
 #include <rclcpp/logger.hpp>
@@ -16,7 +17,10 @@ class SuperGlueFeatureMatcher : public AbstractFeatureMatcher<Eigen::Matrix<doub
     SuperGlueFeatureMatcher(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger);
 
     std::vector<cv::DMatch> matchFeature(Eigen::Matrix<double, 259, Eigen::Dynamic>& keyframe_features, Eigen::Matrix<double, 259, Eigen::Dynamic>& current_frame_features) override;
-    
+
+    std::pair<int,int> getWidthAndHeight(){
+        return std::pair<int, int>(superglue_configs.superglue_config.image_width, superglue_configs.superglue_config.image_height);
+    }
     private:
     Configs superglue_configs;
 

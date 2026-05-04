@@ -8,6 +8,7 @@ SuperGlueFeatureMatcher::SuperGlueFeatureMatcher(const std::string& config_path,
 {
     RCLCPP_INFO(logger, "Building engine for superglue, may take a while if first time");
     superglue->build();
+    RCLCPP_INFO(logger, "Superglue engine build finished");
 }
 
 std::vector<cv::DMatch> SuperGlueFeatureMatcher::matchFeature(Eigen::Matrix<double, 259, Eigen::Dynamic>& keyframe_features, Eigen::Matrix<double, 259, Eigen::Dynamic>& current_frame_features) {

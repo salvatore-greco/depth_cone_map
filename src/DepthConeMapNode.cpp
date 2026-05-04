@@ -1,12 +1,13 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include <cv_bridge/cv_bridge.h>
 #include <iostream>
 #include <memory>
+#include <rclcpp/logging.hpp>
 
 #include "depth_cone_map/MessageContainer.hpp"
 #include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
 #include "depth_cone_map/SuperPointFeatureExtractor.hpp"
 
-// TODO: togliere pose che tanto non serve e usare message container come membro delle classi
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options) {
     parameterDeclaration();
     parameterInitialization();
@@ -16,8 +17,8 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
                                                            this->camera_frame_name, this->get_logger());
     std::cout<<superpointglue_config<<", "<<superpointglue_weight<<std::endl;
-    superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger());
     superpoint = std::make_unique<SuperPointFeatureExtractor>(superpointglue_config, superpointglue_weight, this->get_logger());
+    superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger());
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes,
@@ -29,6 +30,14 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto bounding_boxes_list = image_processor->getBBInJSON();
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
+    cv::Mat img = cv_bridge::toCvShare(image_left, "mono16")->image;
+    auto val = superglue->getWidthAndHeight();
+    std::cout<<(img.rows /val.second)<<" "<<img.cols / val.first<<std::endl;
+    superpoint->setScaleFactorY(img.rows /val.second);
+    superpoint->setScaleFactorX(img.cols / val.first);
+    cv::resize(img, img, cv::Size(val.first, val.second));
+    auto feature = superpoint->getFeatureInBB(img, bounding_boxes_list);
+    RCLCPP_INFO(this->get_logger(), "extracted features");
     if (debug) {
         printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
     }
