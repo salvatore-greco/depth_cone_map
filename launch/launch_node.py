@@ -14,7 +14,7 @@ def generate_launch_description():
         get_package_share_directory("depth_cone_map"), "config", "parameters.yaml"
     )
     superpointglue_config = os.path.join(
-        get_package_share_directory("depth_cone_map"), "config.yaml"
+        get_package_share_directory("depth_cone_map"), "config", "config.yaml"
     )
     superpointglue_weights = os.path.join(
         get_package_share_directory("depth_cone_map"), "weights"

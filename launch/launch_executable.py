@@ -12,6 +12,12 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory("depth_cone_map"), "config", "parameters.yaml"
     )
+    superpointglue_config = os.path.join(
+        get_package_share_directory("depth_cone_map"), "config", "config.yaml"
+    )
+    superpointglue_weights = os.path.join(
+        get_package_share_directory("depth_cone_map"), "weights/"
+    )
     node = Node(
         package="depth_cone_map",
         executable="node_executable",
@@ -26,7 +32,14 @@ def generate_launch_description():
             ("/cone_map", "/slam/cone_map"),
             ("/camera_left_image", "/zed/zed_node/left/color/rect/image"),
         ],
-        parameters=[config, {"debug": LaunchConfiguration("debug")}],
-        prefix="gdbserver localhost:3000",
+        parameters=[
+            config,
+            {
+                "debug": LaunchConfiguration("debug"),
+                "superpointglue_config": superpointglue_config,
+                "superpointglue_weights": superpointglue_weights,
+            },
+        ],
+        # prefix="gdbserver localhost:60000",
     )
     return LaunchDescription([debug, node])

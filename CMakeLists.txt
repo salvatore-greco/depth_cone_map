@@ -126,7 +126,7 @@ install(TARGETS node_composition
 )
 install(DIRECTORY
         launch
-        DESTINATION share/${PROJECT_NAME}
+        DESTINATION share/${PROJECT_NAME}/
 )
 install(DIRECTORY
   config
