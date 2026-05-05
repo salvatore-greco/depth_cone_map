@@ -11,6 +11,9 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     image_processor = std::make_unique<ImageProcessor>(this->get_logger(), this->percentile, message_container);
     image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
                                                            this->camera_frame_name, this->get_logger());
+    keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
+    //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
+    // TODO: implementa l'altra strategia
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes,
