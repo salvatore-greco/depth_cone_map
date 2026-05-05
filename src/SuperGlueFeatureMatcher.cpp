@@ -1,10 +1,11 @@
 #include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
 
 
-SuperGlueFeatureMatcher::SuperGlueFeatureMatcher(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger)
+SuperGlueFeatureMatcher::SuperGlueFeatureMatcher(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger, std::shared_ptr<MessageContainer> message_container)
   : superglue_configs(config_path, weight_path),
     superglue(std::make_unique<SuperGlue>(superglue_configs.superglue_config)),
-    logger(logger)
+    logger(logger),
+    message_container(message_container)
 {
     RCLCPP_INFO(logger, "Building engine for superglue, may take a while if first time");
     superglue->build();
