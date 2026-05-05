@@ -21,7 +21,7 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     std::cout<<superpointglue_config<<", "<<superpointglue_weight<<std::endl;
     superpoint = std::make_unique<SuperPointFeatureExtractor>(superpointglue_config, superpointglue_weight, this->get_logger(), message_container);
     superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger(), message_container);
-    keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1)));
+    keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
     //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
     // TODO: implementa l'altra strategia
 }
