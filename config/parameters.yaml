@@ -3,3 +3,4 @@ DepthConeMapNode:
         world_frame: map
         camera_frame: zed_left_camera_optical_frame
         percentile: 0.2
+        keyframe_time_threshold: 1 #in secondi

@@ -8,13 +8,16 @@
 #include <opencv2/core/types.hpp>
 #include <utility>
 #include <vector>
+#include <memory>
 #include "super_glue.h"
 #include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
 
+class MessageContainer;
+
 class SuperGlueFeatureMatcher : public AbstractFeatureMatcher<Eigen::Matrix<double, 259, Eigen::Dynamic>, cv::DMatch>{
     public:
-    SuperGlueFeatureMatcher(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger);
+    SuperGlueFeatureMatcher(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger, std::shared_ptr<MessageContainer> message_container);
 
     std::vector<cv::DMatch> matchFeature(Eigen::Matrix<double, 259, Eigen::Dynamic>& keyframe_features, Eigen::Matrix<double, 259, Eigen::Dynamic>& current_frame_features) override;
 
@@ -27,5 +30,7 @@ class SuperGlueFeatureMatcher : public AbstractFeatureMatcher<Eigen::Matrix<doub
     std::unique_ptr<SuperGlue> superglue;
 
     rclcpp::Logger logger;
+
+    std::shared_ptr<MessageContainer> message_container;
 };
 #endif // SUPERGLUEFEATUREMATCHER_HPP

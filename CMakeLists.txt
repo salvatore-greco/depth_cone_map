@@ -38,7 +38,7 @@ FetchContent_MakeAvailable(simdjson)
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/SuperPoint-SuperGlue-TensorRT-v2)
 
 add_library(super_point_glue SHARED src/SuperPointFeatureExtractor.cpp src/SuperGlueFeatureMatcher.cpp)
-add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp)
+add_library(source SHARED src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp src/MessageContainer.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_node(
@@ -100,7 +100,7 @@ ament_target_dependencies(node_composition PUBLIC
         tf2_ros
         tf2_geometry_msgs
 )
-target_link_libraries(super_point_glue PUBLIC superpointglue_lib rclcpp::rclcpp)
+target_link_libraries(super_point_glue PUBLIC superpointglue_lib rclcpp::rclcpp cv_bridge::cv_bridge)
 set_target_properties(superpointglue_lib PROPERTIES
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
     $<TARGET_PROPERTY:superpointglue_lib,INTERFACE_INCLUDE_DIRECTORIES>

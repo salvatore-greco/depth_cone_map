@@ -10,17 +10,19 @@
 #include <utility>
 #include "Exceptions.hpp"
 
+class MessageContainer;
+
 class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix<double, 259, Eigen::Dynamic>>{
     public:
-    SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger);
+    SuperPointFeatureExtractor(const std::string& config_path, const std::string& weight_path, const rclcpp::Logger& logger, std::shared_ptr<MessageContainer> message_container);
 
     Eigen::Matrix<double, 259, Eigen::Dynamic> getFeatureInBB(cv::Mat image, const std::list<std::pair<cv::Point, cv::Point>>& bb) override;
 
-    void setScaleFactorX(int scale_factor_x){
+    void setScaleFactorX(float scale_factor_x){
         this->scale_factor_x = scale_factor_x;
     }
 
-    void setScaleFactorY(int scale_factor_y){
+    void setScaleFactorY(float scale_factor_y){
         this->scale_factor_y = scale_factor_y;
     }
 
@@ -34,10 +36,12 @@ class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix
 
     rclcpp::Logger logger;
 
+    std::shared_ptr<MessageContainer> message_container;
+
     bool isInsideBoundingBox(const double x_feature, const double y_feature, const std::pair<cv::Point, cv::Point>& bb) const;
 
-    int scale_factor_x = 1;
-    int scale_factor_y = 1;
+    float scale_factor_x = 1;
+    float scale_factor_y = 1;
 
 };
 
