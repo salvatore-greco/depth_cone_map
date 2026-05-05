@@ -3,6 +3,7 @@
 
 #include "RosHandler.hpp"
 #include "depth_cone_map/Cone.hpp"
+#include "depth_cone_map/KeyframeHandler.hpp"
 #include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
 #include "depth_cone_map/SuperPointFeatureExtractor.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -43,6 +44,8 @@ private:
 
     std::unique_ptr<SuperPointFeatureExtractor> superpoint;
     std::unique_ptr<SuperGlueFeatureMatcher> superglue;
+    std::shared_ptr<KeyframeHandler> keyframe_handler;
+    bool do_not_match = true;
 
     //ROS parameter from launch file
     std::string map_frame_name;

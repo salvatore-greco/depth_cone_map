@@ -4,9 +4,11 @@
 #include <memory>
 #include <rclcpp/logging.hpp>
 
+#include "depth_cone_map/KeyframeHandler.hpp"
 #include "depth_cone_map/MessageContainer.hpp"
 #include "depth_cone_map/SuperGlueFeatureMatcher.hpp"
 #include "depth_cone_map/SuperPointFeatureExtractor.hpp"
+#include "depth_cone_map/TemporalKeyframeStrategy.hpp"
 
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options) {
     parameterDeclaration();
@@ -17,29 +19,46 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
                                                            this->camera_frame_name, this->get_logger());
     std::cout<<superpointglue_config<<", "<<superpointglue_weight<<std::endl;
-    superpoint = std::make_unique<SuperPointFeatureExtractor>(superpointglue_config, superpointglue_weight, this->get_logger());
-    superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger());
+    superpoint = std::make_unique<SuperPointFeatureExtractor>(superpointglue_config, superpointglue_weight, this->get_logger(), message_container);
+    superglue = std::make_unique<SuperGlueFeatureMatcher>(superpointglue_config, superpointglue_weight, this->get_logger(), message_container);
+    keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1)));
+    //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
+    // TODO: implementa l'altra strategia
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes,
                                 const sensor_msgs::msg::Image::ConstSharedPtr& depth_image,
                                 const sensor_msgs::msg::Image::ConstSharedPtr& image_left) {
-    RCLCPP_INFO(this->get_logger(), "Received messages");
+    // RCLCPP_INFO(this->get_logger(), "Received messages");
     this->message_container->saveMessages(bounding_boxes, depth_image, image_left);
 
     const auto bounding_boxes_list = image_processor->getBBInJSON();
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
-    cv::Mat img = cv_bridge::toCvShare(image_left, "mono16")->image;
+
+
+    // questa implementazione di superpoint sembra preferire le immagini in bianco e nero con encoding mono8.
+    // con mono16 trova pochissime feature
+    cv::Mat img = cv_bridge::toCvShare(image_left, "mono8")->image;
     auto val = superglue->getWidthAndHeight();
-    std::cout<<(img.rows /val.second)<<" "<<img.cols / val.first<<std::endl;
-    superpoint->setScaleFactorY(img.rows /val.second);
-    superpoint->setScaleFactorX(img.cols / val.first);
-    cv::resize(img, img, cv::Size(val.first, val.second));
+    // std::cout<<(img.rows /val.second)<<" "<<img.cols / val.first<<std::endl;
+    superpoint->setScaleFactorX(static_cast<float>(img.cols) / val.first);
+    superpoint->setScaleFactorY(static_cast<float>(img.rows) / val.second);
+    cv::resize(img, img, cv::Size(val.first, val.second)); //ridimensionamento per rispettare ciò che si aspetta superpoint; settato in config.yaml
     auto feature = superpoint->getFeatureInBB(img, bounding_boxes_list);
-    RCLCPP_INFO(this->get_logger(), "extracted features");
+    // RCLCPP_INFO(this->get_logger(), "extracted features");
+
+    if(!do_not_match){
+        //FIXME: assicurati venga fatto RVO oppure usa la semantica move; (così viene copiata ogni volta)
+        Eigen::Matrix<double, 259, Eigen::Dynamic> kf_feature = keyframe_handler->getCurrentFrameFeature();
+        auto matches = superglue->matchFeature(kf_feature, feature);
+    }
+
     if (debug) {
         printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
+    }
+    if(keyframe_handler->saveKeyframe(image_left, std::move(feature))){
+        do_not_match = false;
     }
     ros_handler->publish_cones(std::move(marker_array_cones));
 }
