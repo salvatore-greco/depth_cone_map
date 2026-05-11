@@ -26,6 +26,8 @@ class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix
         this->scale_factor_y = scale_factor_y;
     }
 
+    bool isInsideBoundingBox(const double x_feature, const double y_feature, const std::pair<cv::Point, cv::Point>& bb) const;
+
     protected:
     Eigen::Matrix<double, 259, Eigen::Dynamic> extractFeature(cv::Mat image) override;
 
@@ -38,7 +40,6 @@ class SuperPointFeatureExtractor : public AbstractFeatureExtractor<Eigen::Matrix
 
     std::shared_ptr<MessageContainer> message_container;
 
-    bool isInsideBoundingBox(const double x_feature, const double y_feature, const std::pair<cv::Point, cv::Point>& bb) const;
 
     float scale_factor_x = 1;
     float scale_factor_y = 1;

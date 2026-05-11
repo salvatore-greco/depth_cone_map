@@ -15,6 +15,7 @@
 #include "MessageContainer.hpp"
 #include "tf2_ros/buffer.h"
 #include <memory>
+#include <map>
 #include <opencv2/core/types.hpp>
 #include <string>
 #include <vector>
@@ -46,6 +47,7 @@ private:
     std::unique_ptr<SuperGlueFeatureMatcher> superglue;
     std::shared_ptr<KeyframeHandler> keyframe_handler;
     bool do_not_match = true;
+    std::map<int, Cone> cone_map;
 
     //ROS parameter from launch file
     std::string map_frame_name;

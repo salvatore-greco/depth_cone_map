@@ -36,7 +36,8 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
 
-
+    // ----------------------------------------------------------------------------------------------------------------
+    // TUTTO QUESTO CODICE POI ANDRÀ IN UNA CLASSE
     // questa implementazione di superpoint sembra preferire le immagini in bianco e nero con encoding mono8.
     // con mono16 trova pochissime feature
     cv::Mat img = cv_bridge::toCvShare(image_left, "mono8")->image;
@@ -52,11 +53,26 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
         //FIXME: assicurati venga fatto RVO oppure usa la semantica move; (così viene copiata ogni volta)
         Eigen::Matrix<double, 259, Eigen::Dynamic> kf_feature = keyframe_handler->getCurrentFrameFeature();
         auto matches = superglue->matchFeature(kf_feature, feature);
+        RCLCPP_INFO(this->get_logger(), "Matches: %zu", matches.size());
+        // ora devo prendere tutti i match dentro una singola bounding box
+        // se sono più di 1 devo mettere un id e salvarlo nella mia mappa
+        // poi vanno pubblicati
+        for (const auto& match : matches){
+           auto x_feature = feature(1,match.queryIdx);
+           auto y_feature = feature(2, match.queryIdx);
+
+           // La commento sennò clangd grida e mi urta
+           // superpoint->isInsideBoundingBox(x_feature, y_feature, const std::pair<cv::Point, cv::Point> &bb);
+           // devo vedere quale feature è dentro quale bounding box. Contare il numero di match rispetto alla feature del frame corrente (queryImg)
+           // poi devo vedere se quel cono è già stato identificato e aggiungerlo o aggiornare la sua posizione con dati più precisi.
+        }
     }
 
+    // ----------------------------------------------------------------------------------------------------------------
     if (debug) {
         printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
     }
+
     if(keyframe_handler->saveKeyframe(image_left, std::move(feature))){
         do_not_match = false;
     }
