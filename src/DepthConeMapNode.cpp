@@ -16,9 +16,8 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     // TODO: implementa l'altra strategia
 }
 
-void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes,
-                                const sensor_msgs::msg::Image::ConstSharedPtr& depth_image,
-                                const sensor_msgs::msg::Image::ConstSharedPtr& image_left) {
+void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose) {
+
     RCLCPP_INFO(this->get_logger(), "Received messages");
     this->message_container->saveMessages(bounding_boxes, depth_image, image_left);
     RCLCPP_INFO(this->get_logger(), "after saving messages");

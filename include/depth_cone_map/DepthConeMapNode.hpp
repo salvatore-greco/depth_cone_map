@@ -26,7 +26,7 @@ class DepthConeMapNode : public rclcpp::Node {
 public:
     explicit DepthConeMapNode(const rclcpp::NodeOptions& options);
 
-    void callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left);
+    void callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose);
 
     void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& camera_info);
 private:
