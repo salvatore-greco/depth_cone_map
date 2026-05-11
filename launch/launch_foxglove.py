@@ -14,6 +14,12 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory("depth_cone_map"), "config", "parameters.yaml"
     )
+    superpointglue_config = os.path.join(
+        get_package_share_directory("depth_cone_map"), "config", "config.yaml"
+    )
+    superpointglue_weights = os.path.join(
+        get_package_share_directory("depth_cone_map"), "weights"
+    )
     container = ComposableNodeContainer(
         name="depth_cone_map_node_container",
         namespace="",
@@ -33,7 +39,14 @@ def generate_launch_description():
                     ("/cone_map", "/slam/cone_map"),
                     ("/camera_left_image", "/zed/zed_node/left/color/rect/image"),
                 ],
-                parameters=[config, {"debug": LaunchConfiguration("debug")}],
+                parameters=[
+                    config,
+                    {
+                        "debug": LaunchConfiguration("debug"),
+                        "superpointglue_config": superpointglue_config,
+                        "superpointglue_weights": superpointglue_weights,
+                    },
+                ],
             ),
             ComposableNode(
                 package="foxglove_bridge",
