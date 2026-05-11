@@ -24,6 +24,7 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(GTSAM REQUIRED)
 
 # including simdjson for bounding boxes message parsing
 # source: Using simdjson as a CMake dependency https://simdjson.github.io/simdjson/md_doc_2basics.html
@@ -72,6 +73,7 @@ ament_target_dependencies(source PUBLIC
         tf2_geometry_msgs
         message_filters
         rclcpp_components
+        GTSAM
 )
 
 target_link_libraries(node_composition PUBLIC simdjson source)
@@ -87,6 +89,7 @@ ament_target_dependencies(node_composition PUBLIC
         tf2
         tf2_ros
         tf2_geometry_msgs
+        GTSAM
 )
 
 

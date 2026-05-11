@@ -1,7 +1,8 @@
 #include "depth_cone_map/ImageTransformer.hpp"
 
+// dovrei passare una std::map di struct Cones con posizione, id e colore
 driverless_msgs::msg::MarkerArrayStamped ImageTransformer::cameraToWorld(const std::vector<cv::Point3f> &cones) {
-    
+
     std::vector<visualization_msgs::msg::Marker> markers;
     geometry_msgs::msg::TransformStamped transformation;
     try {
