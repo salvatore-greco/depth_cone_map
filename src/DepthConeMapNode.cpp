@@ -1,9 +1,12 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include <nanoflann.hpp>
+#include <opencv2/core/types.hpp>
 
+#include "depth_cone_map/ConeAdaptor.hpp"
 #include "depth_cone_map/MessageContainer.hpp"
 
 // TODO: togliere pose che tanto non serve e usare message container come membro delle classi
-DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options) {
+DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options), cone_adaptor(cones), kd_tree_cones(3, cone_adaptor) {
     parameterDeclaration();
     parameterInitialization();
     message_container = std::make_shared<MessageContainer>();
@@ -14,20 +17,57 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
     //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
     // TODO: implementa l'altra strategia
+
+    //ok dopo un colloquio con Claude la mia intuizione era corretta, posso usare la prima posa come prior pose.
+    // prior noise e odom noise le posso mettere qua
+    cones.reserve(500);
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose) {
 
+    static int cone_idx = 0;
+    static int pose_idx = 0;
+    // un problema che potrei avere è che o chiamo isam update spesso e vedo i coni che mi caca fuori
+    // oppure pubblico il cono appena lo vedo e lo raffino dopo
+    // se sono operazioni abbastanza veloci ho una mappa solida anche per l'autox, altrimenti solo trackdrive
+
+    if (first_pose){
+        // creare oggetto posa come prior pose. Aggiungerla al grafo
+        first_pose = false;
+    }
+    else{
+        // creare oggetto posa come between factor + landmark al grafo + da.
+        // va relativizzata la posa rispetto all'ultima
+    }
     RCLCPP_INFO(this->get_logger(), "Received messages");
     this->message_container->saveMessages(bounding_boxes, depth_image, image_left);
     RCLCPP_INFO(this->get_logger(), "after saving messages");
     const auto bounding_boxes_list = image_processor->getBBInJSON();
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
+    // devo aggiungerli alla struttura globale -> data association
+    for (const cv::Point3f& cone : cones){
+        //facciamolo brutto, devo cambiare cosa mi ritornano getConeInCameraFrame e camera to world
+        // ho seguito l'esempio in nanoflann/example/dynamic_pointcloud_example.cpp
+        const double DIST_THRESHOLD = 1.0;
+        size_t ret_idx;
+        float out_dist_square;
+        nanoflann::KNNResultSet<float> result_set(1); //1 come magic number perchè voglio il primo vicino più vicino
+        result_set.init(&ret_idx, &out_dist_square);
+        kd_tree_cones.findNeighbors(result_set, cone, {10}); //TODO: cone deve essere del tipo definito in cone adaptor(quindi struct cone).
+        if (cv::norm(cone-(this->cones[ret_idx].position_world_frame))>DIST_THRESHOLD){
+            Cone cone_to_add(cone, "colore", cone_idx++);
+            this->cones.push_back(cone_to_add);
+            kd_tree_cones.addPoints(cone_idx-1, cone_idx); //sono gli indici nel contenitore
+            //va aggiunto a isam come values
+        }
+        // va aggiunto a isam come factor
+    }
     if (debug) {
         printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
     }
     ros_handler->publish_cones(std::move(marker_array_cones));
+    // quando faccio isam update pulisco il grafo che stavo mantenendo qua (viene aggiunto tramite isam update)
 }
 
 void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& camera_info) {

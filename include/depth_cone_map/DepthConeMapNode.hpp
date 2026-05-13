@@ -2,6 +2,9 @@
 #define DEPTHCONEMAPNODE_DEFINE
 
 #include "RosHandler.hpp"
+#include "depth_cone_map/Cone.hpp"
+#include "depth_cone_map/ConeAdaptor.hpp"
+#include "depth_cone_map/KeyframeHandler.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "driverless_msgs/msg/bounding_boxes.hpp"
@@ -17,10 +20,13 @@
 #include "ImageProcessor.hpp"
 #include "ImageTransformer.hpp"
 #include "MessageContainer.hpp"
+#include "TemporalKeyframeStrategy.hpp"
 #include <ios>
 #include <memory>
 #include <rclcpp/logging.hpp>
 #include <sstream>
+#include <gtsam/nonlinear/ISAM2.h>
+#include <nanoflann.hpp>
 
 class DepthConeMapNode : public rclcpp::Node {
 public:
@@ -38,6 +44,14 @@ private:
 
     std::shared_ptr<MessageContainer> message_container;
 
+    std::shared_ptr<KeyframeHandler> keyframe_handler;
+
+    gtsam::ISAM2 isam2;
+
+    ConeAdaptor cone_adaptor;
+    nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, ConeAdaptor>, ConeAdaptor, 3> kd_tree_cones;
+    std::vector<Cone> cones;
+
     //ROS parameter from launch file
     std::string map_frame_name;
 
@@ -46,6 +60,8 @@ private:
     double percentile;
 
     bool debug;
+
+    bool first_pose = true;
 
     void parameterDeclaration();
 

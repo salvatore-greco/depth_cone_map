@@ -25,6 +25,7 @@ find_package(OpenCV REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(GTSAM REQUIRED)
+find_package(nanoflann REQUIRED)
 
 # including simdjson for bounding boxes message parsing
 # source: Using simdjson as a CMake dependency https://simdjson.github.io/simdjson/md_doc_2basics.html
