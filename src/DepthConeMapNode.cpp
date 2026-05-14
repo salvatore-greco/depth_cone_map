@@ -1,4 +1,15 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
+#include <gtsam/base/Vector.h>
+#include <gtsam/geometry/BearingRange.h>
+#include <gtsam/geometry/Point2.h>
+#include <gtsam/geometry/Point3.h>
+#include <gtsam/geometry/Rot3.h>
+#include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/PriorFactor.h>
+#include <gtsam/nonlinear/Values.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/inference/Symbol.h>
 #include <nanoflann.hpp>
 #include <opencv2/core/types.hpp>
 
@@ -20,6 +31,10 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
 
     //ok dopo un colloquio con Claude la mia intuizione era corretta, posso usare la prima posa come prior pose.
     // prior noise e odom noise le posso mettere qua
+
+    //FIXME: metti dei valori di rumore decenti
+    prior_noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(1,1,1));
+    odom_noise = gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(1,1,1));
     cones.reserve(500);
 }
 
@@ -27,12 +42,23 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
 
     static int cone_idx = 0;
     static int pose_idx = 0;
+    gtsam::NonlinearFactorGraph new_factors;
+    gtsam::Values new_values;
     // un problema che potrei avere è che o chiamo isam update spesso e vedo i coni che mi caca fuori
     // oppure pubblico il cono appena lo vedo e lo raffino dopo
     // se sono operazioni abbastanza veloci ho una mappa solida anche per l'autox, altrimenti solo trackdrive
 
     if (first_pose){
-        // creare oggetto posa come prior pose. Aggiungerla al grafo
+        gtsam::Pose3 prior_pose(
+            gtsam::Rot3::Quaternion(
+                pose->pose.orientation.w,
+                pose->pose.orientation.x,
+                pose->pose.orientation.y,
+                pose->pose.orientation.z
+            ),
+            gtsam::Point3(pose->pose.position.x, pose->pose.position.y, pose->pose.position.z)
+        );
+        new_factors.addPrior(gtsam::Symbol('p', pose_idx++), prior_pose, this->prior_noise);
         first_pose = false;
     }
     else{
@@ -45,7 +71,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto bounding_boxes_list = image_processor->getBBInJSON();
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto marker_array_cones = image_transformer->cameraToWorld(cones);
-    // devo aggiungerli alla struttura globale -> data association
+
     for (const cv::Point3f& cone : cones){
         //facciamolo brutto, devo cambiare cosa mi ritornano getConeInCameraFrame e camera to world
         // ho seguito l'esempio in nanoflann/example/dynamic_pointcloud_example.cpp
@@ -60,12 +86,14 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
             this->cones.push_back(cone_to_add);
             kd_tree_cones.addPoints(cone_idx-1, cone_idx); //sono gli indici nel contenitore
             //va aggiunto a isam come values
+            new_values.insert(gtsam::Symbol('l', cone_to_add.id), gtsam::Point2(cone_to_add.position_world_frame.x, cone_to_add.position_world_frame.y));
         }
         // va aggiunto a isam come factor
     }
     if (debug) {
         printDebug(bounding_boxes_list, cones, marker_array_cones.markers);
     }
+    // isam2.update()
     ros_handler->publish_cones(std::move(marker_array_cones));
     // quando faccio isam update pulisco il grafo che stavo mantenendo qua (viene aggiunto tramite isam update)
 }

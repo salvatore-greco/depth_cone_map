@@ -26,6 +26,7 @@
 #include <rclcpp/logging.hpp>
 #include <sstream>
 #include <gtsam/nonlinear/ISAM2.h>
+#include <gtsam/linear/NoiseModel.h>
 #include <nanoflann.hpp>
 
 class DepthConeMapNode : public rclcpp::Node {
@@ -51,6 +52,8 @@ private:
     ConeAdaptor cone_adaptor;
     nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, ConeAdaptor>, ConeAdaptor, 3> kd_tree_cones;
     std::vector<Cone> cones;
+    gtsam::noiseModel::Diagonal::shared_ptr prior_noise;
+    gtsam::noiseModel::Diagonal::shared_ptr odom_noise;
 
     //ROS parameter from launch file
     std::string map_frame_name;
