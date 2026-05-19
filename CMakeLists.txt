@@ -26,6 +26,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(nanoflann REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # including simdjson for bounding boxes message parsing
 # source: Using simdjson as a CMake dependency https://simdjson.github.io/simdjson/md_doc_2basics.html
@@ -37,7 +38,8 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE)
 
 FetchContent_MakeAvailable(simdjson)
-add_library(source src/ImageProcessor.cpp src/RosHandler.cpp src/ImageTransformer.cpp)
+add_library(source src/ImageProcessor.cpp src/RosHandler.cpp
+            src/ImageTransformer.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_node(
@@ -60,7 +62,7 @@ target_include_directories(source PUBLIC
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-target_link_libraries(source PUBLIC simdjson)
+target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen)
 ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
@@ -73,25 +75,24 @@ ament_target_dependencies(source PUBLIC
         tf2_ros
         tf2_geometry_msgs
         message_filters
-        rclcpp_components
-        GTSAM
+        visualization_msgs
 )
 
-target_link_libraries(node_composition PUBLIC simdjson source)
-ament_target_dependencies(node_composition PUBLIC
-        rclcpp
-        rclcpp_components
-        message_filters
-        driverless_msgs
-        geometry_msgs
-        sensor_msgs
-        visualization_msgs
-        cv_bridge
-        tf2
-        tf2_ros
-        tf2_geometry_msgs
-        GTSAM
-)
+target_link_libraries(node_composition PUBLIC source)
+ament_target_dependencies(node_composition PUBLIC rclcpp_components)
+# ament_target_dependencies(node_composition PUBLIC
+#         rclcpp
+#         rclcpp_components
+#         message_filters
+#         driverless_msgs
+#         geometry_msgs
+#         sensor_msgs
+#         visualization_msgs
+#         cv_bridge
+#         tf2
+#         tf2_ros
+#         tf2_geometry_msgs
+# )
 
 
 # add_executable(node_executable src/main.cpp)
