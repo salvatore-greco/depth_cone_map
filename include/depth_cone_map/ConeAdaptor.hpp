@@ -27,7 +27,7 @@ class ConeAdaptor{
 
     // unused
     template <class BBOX>
-    bool kdtree_get_bbox(BBOX &bb) const {
+    bool kdtree_get_bbox(BBOX &) const {
             return false;
     }
 
