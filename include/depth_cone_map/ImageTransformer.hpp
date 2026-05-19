@@ -9,11 +9,13 @@
 #include "geometry_msgs/msg/transform_stamped.h"
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <opencv2/core/types.hpp>
+#include <vector>
+#include "Cone.hpp"
 
 
 class ImageTransformer{
 public:
-    explicit ImageTransformer(const rclcpp::Clock::SharedPtr& clock, const std::string& map_frame_name, const std::string& camera_frame_name, const rclcpp::Logger& logger): 
+    explicit ImageTransformer(const rclcpp::Clock::SharedPtr& clock, const std::string& map_frame_name, const std::string& camera_frame_name, const rclcpp::Logger& logger):
         clock(clock),
         map_frame_name(map_frame_name),
         camera_frame_name(camera_frame_name),
@@ -22,8 +24,8 @@ public:
         logger(logger)
         {};
 
-        driverless_msgs::msg::MarkerArrayStamped cameraToWorld(const std::vector<cv::Point3f> &cones);
-        
+        std::vector<Cone> cameraToWorld(const std::vector<cv::Point3f> &cones);
+
 
 
 private:

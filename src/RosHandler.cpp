@@ -1,9 +1,8 @@
 #include "depth_cone_map/RosHandler.hpp"
-#include "depth_cone_map/DepthConeMapNode.hpp"
 #include <functional>
-#include <sensor_msgs/msg/detail/image__struct.hpp>
-
-RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node) : qos(10), node_ptr(node_ptr) {
+// #include "depth_cone_map/DepthConeMapNode.hpp"
+class DepthConeMapNode;
+RosHandler::RosHandler(rclcpp::Node* node_ptr, const std::string& map_frame_name, callback callback, camera_info_callback camera_info_callback) : qos(10), node_ptr(node_ptr), map_frame_name(map_frame_name)  {
     int queue_size = 10; //FIXME: trova un valore appropriato
 
     bb_sub.subscribe(node_ptr, "/bounding_boxes");
@@ -20,14 +19,35 @@ RosHandler::RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_
     );
 
 
-    sync->registerCallback(std::bind(&DepthConeMapNode::callback, &depth_cone_map_node, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+    sync->registerCallback(std::bind(callback, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
     cone_pub = node_ptr->create_publisher<driverless_msgs::msg::MarkerArrayStamped>("/cone_map", qos);
 
-    camera_info_sub = node_ptr->create_subscription<sensor_msgs::msg::CameraInfo>("/camera_info", qos, std::bind(&DepthConeMapNode::cameraInfoCallback, &depth_cone_map_node, std::placeholders::_1));
+    // camera_info_sub = node_ptr->create_subscription<sensor_msgs::msg::CameraInfo>("/camera_info", qos, std::bind(&DepthConeMapNode::cameraInfoCallback, &depth_cone_map_node, std::placeholders::_1));
+    camera_info_sub = node_ptr->create_subscription<sensor_msgs::msg::CameraInfo>("/camera_info", qos, camera_info_callback);
 }
 
-void RosHandler::publish_cones(driverless_msgs::msg::MarkerArrayStamped msg) const{
-    msg.header.stamp = node_ptr->now();
-    cone_pub->publish(msg);
+void RosHandler::publish_cones(std::vector<Cone>& cones) const{
+    std::vector<visualization_msgs::msg::Marker> markers;
+    for (const auto& cone : cones){
+        visualization_msgs::msg::Marker marker;
+        //copiando come viene fatto da clustering_node
+        marker.type = marker.CYLINDER;
+        marker.header.frame_id = this->map_frame_name;
+        marker.scale.x = 0.5;
+        marker.scale.y = 0.5;
+        marker.scale.z = 0.7;
+        marker.pose.position.x = cone.position_world_frame.x;
+        marker.pose.position.y = cone.position_world_frame.y;
+        marker.pose.position.z = cone.position_world_frame.z;
+        marker.pose.orientation.w = 1.0;
+        marker.pose.orientation.y = 0.0;
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.z = 0.0;
+        markers.push_back(std::move(marker)); //non posso usare emplace back perchè il messaggio non ha un costruttore con argomenti.
+    }
+    driverless_msgs::msg::MarkerArrayStamped marker_array_stamped;
+    marker_array_stamped.markers = markers;
+    marker_array_stamped.header.stamp = node_ptr->now();
+    cone_pub->publish(marker_array_stamped);
 }

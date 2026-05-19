@@ -17,16 +17,24 @@
 #include <message_filters/synchronizer.h>
 #include <rclcpp/qos.hpp>
 #include <functional>
-#include <sensor_msgs/msg/detail/image__struct.hpp>
-
+#include "Cone.hpp"
+#include <string>
+#include <vector>
 
 
 class DepthConeMapNode;
 
 class RosHandler{
     public:
-        RosHandler(rclcpp::Node* node_ptr, DepthConeMapNode& depth_cone_map_node);
-        void publish_cones(driverless_msgs::msg::MarkerArrayStamped msg) const;
+        using callback = std::function<void(
+            const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr&,
+            const sensor_msgs::msg::Image::ConstSharedPtr&,
+            const sensor_msgs::msg::Image::ConstSharedPtr&,
+            const driverless_msgs::msg::PoseStamped::ConstSharedPtr&)
+        >;
+        using camera_info_callback = std::function<void(const sensor_msgs::msg::CameraInfo::ConstSharedPtr&)>;
+        RosHandler(rclcpp::Node* node_ptr, const std::string& map_frame_name, callback callback, camera_info_callback camera_info_callback);
+        void publish_cones(std::vector<Cone>& cones) const;
         inline void camera_info_unsubscribe() {
             camera_info_sub.reset();
         }
@@ -51,6 +59,8 @@ class RosHandler{
             sensor_msgs::msg::Image, driverless_msgs::msg::PoseStamped>>> sync;
 
         rclcpp::Node* node_ptr;
+
+        std::string map_frame_name;
 
 };
 
