@@ -54,6 +54,7 @@ private:
     std::vector<Cone> cones;
     gtsam::noiseModel::Diagonal::shared_ptr prior_noise;
     gtsam::noiseModel::Diagonal::shared_ptr odom_noise;
+    gtsam::noiseModel::Robust::shared_ptr landmark_noise;
 
     //ROS parameter from launch file
     std::string map_frame_name;
@@ -70,7 +71,7 @@ private:
 
     void parameterInitialization();
 
-    void printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list, const std::vector<cv::Point3f>& cones, const std::vector<visualization_msgs::msg::Marker>& marker_array_cones);
+    void printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list, const std::vector<cv::Point3f>& cones, const std::vector<Cone>& cones_world_frame);
 };
 
 #endif
