@@ -25,6 +25,7 @@
 #include <memory>
 #include <rclcpp/logging.hpp>
 #include <sstream>
+#include <faiss/IndexFlat.h>
 #include <gtsam/nonlinear/ISAM2.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <nanoflann.hpp>
@@ -55,6 +56,7 @@ private:
     gtsam::noiseModel::Diagonal::shared_ptr prior_noise;
     gtsam::noiseModel::Diagonal::shared_ptr odom_noise;
     gtsam::noiseModel::Robust::shared_ptr landmark_noise;
+    faiss::IndexFlatL2 faiss_index;
 
     //ROS parameter from launch file
     std::string map_frame_name;
@@ -64,6 +66,8 @@ private:
     double percentile;
 
     bool debug;
+
+    double dist_threshold;
 
     bool first_pose = true;
 

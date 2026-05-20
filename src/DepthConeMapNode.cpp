@@ -193,6 +193,7 @@ void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("camera_frame", "zed_left_camera_optical_frame");
     this->declare_parameter("percentile", 0.2);
     this->declare_parameter("debug", false);
+    this->declare_parameter("dist_threshold", 3.0);
 }
 
 void DepthConeMapNode::parameterInitialization() {
@@ -200,6 +201,7 @@ void DepthConeMapNode::parameterInitialization() {
     camera_frame_name = this->get_parameter("camera_frame").as_string();
     percentile = this->get_parameter("percentile").as_double();
     debug = this->get_parameter("debug").as_bool();
+    dist_threshold = this->get_parameter("dist_threshold").as_double();
 }
 
 void DepthConeMapNode::printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list,
