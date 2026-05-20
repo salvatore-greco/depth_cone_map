@@ -1,6 +1,7 @@
 #ifndef IMAGETRANSFORMER_HPP
 #define IMAGETRANSFORMER_HPP
 
+#include "depth_cone_map/MessageContainer.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include <rclcpp/logger.hpp>
 #include <tf2_ros/buffer.h>
@@ -15,13 +16,14 @@
 
 class ImageTransformer{
 public:
-    explicit ImageTransformer(const rclcpp::Clock::SharedPtr& clock, const std::string& map_frame_name, const std::string& camera_frame_name, const rclcpp::Logger& logger):
+    explicit ImageTransformer(const rclcpp::Clock::SharedPtr& clock, const std::string& map_frame_name, const std::string& camera_frame_name, const rclcpp::Logger& logger, std::shared_ptr<MessageContainer> message_container):
         clock(clock),
         map_frame_name(map_frame_name),
         camera_frame_name(camera_frame_name),
         tf2_buffer(std::make_unique<tf2_ros::Buffer>(clock)),
         tf2_listener(std::make_unique<tf2_ros::TransformListener>(*tf2_buffer)),
-        logger(logger)
+        logger(logger),
+        message_container(message_container)
         {};
 
         std::vector<Cone> cameraToWorld(const std::vector<cv::Point3f> &cones);
@@ -38,6 +40,7 @@ private:
     std::unique_ptr<tf2_ros::Buffer> tf2_buffer;
     std::unique_ptr<tf2_ros::TransformListener> tf2_listener;
     rclcpp::Logger logger;
+    std::shared_ptr<MessageContainer> message_container;
 };
 
 #endif // IMAGETRANSFORMER_HPP

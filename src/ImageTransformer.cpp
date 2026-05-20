@@ -1,16 +1,23 @@
 #include "depth_cone_map/ImageTransformer.hpp"
 #include <opencv2/core/types.hpp>
+#include <rclcpp/logging.hpp>
 #include <vector>
 
 std::vector<Cone> ImageTransformer::cameraToWorld(const std::vector<cv::Point3f> &cones) {
 
     geometry_msgs::msg::TransformStamped transformation;
+    auto time = message_container->getDepthImage()->header.stamp;
     try {
         transformation = tf2_buffer->lookupTransform(
-            map_frame_name, camera_frame_name, tf2::TimePointZero);
+            map_frame_name, camera_frame_name, time);
     }
     catch (const tf2::LookupException& e) {
         RCLCPP_ERROR(logger, "Error when looking up transform %s", e.what());
+    }
+    catch(const tf2::ExtrapolationException& e){
+        RCLCPP_ERROR(logger, "Cannot transform back in time... returning an empty list.");
+        RCLCPP_ERROR(logger, "exception what: %s", e.what());
+        return std::vector<Cone>();
     }
     std::vector<Cone> cones_world_frame;
     for (const auto &cone: cones) {
