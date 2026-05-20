@@ -27,6 +27,8 @@ find_package(message_filters REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(nanoflann REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(faiss CONFIG REQUIRED)
+find_package(OpenMP REQUIRED)
 
 # including simdjson for bounding boxes message parsing
 # source: Using simdjson as a CMake dependency https://simdjson.github.io/simdjson/md_doc_2basics.html
@@ -62,7 +64,7 @@ target_include_directories(source PUBLIC
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen)
+target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen faiss)
 ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
