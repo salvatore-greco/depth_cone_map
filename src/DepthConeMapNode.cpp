@@ -1,6 +1,8 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
 #include <Eigen/Core>
 #include <Eigen/src/Core/Matrix.h>
+#include <faiss/IndexFlat.h>
+#include <faiss/MetricType.h>
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/BearingRange.h>
 #include <gtsam/geometry/Point2.h>
@@ -15,8 +17,8 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/sam/BearingRangeFactor.h>
 #include <chrono>
+#include <cstddef>
 #include <functional>
-#include <nanoflann.hpp>
 #include <opencv2/core/types.hpp>
 #include <rclcpp/logging.hpp>
 
@@ -25,7 +27,7 @@
 #include "depth_cone_map/MessageContainer.hpp"
 
 // TODO: togliere pose che tanto non serve e usare message container come membro delle classi
-DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options), cone_adaptor(cones), kd_tree_cones(3, cone_adaptor) {
+DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("depth_cone_map", options), cone_adaptor(cones), kd_tree_cones(3, cone_adaptor), faiss_index(3) {
     parameterDeclaration();
     parameterInitialization();
     message_container = std::make_shared<MessageContainer>();
@@ -37,7 +39,7 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     );
     image_processor = std::make_unique<ImageProcessor>(this->get_logger(), this->percentile, message_container);
     image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
-                                                           this->camera_frame_name, this->get_logger());
+                                                           this->camera_frame_name, this->get_logger(), message_container);
     keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
     //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
     // TODO: implementa l'altra strategia
@@ -59,6 +61,7 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
             gtsam::noiseModel::Diagonal::Sigmas(gtsam::Vector3(0.05, 0.05, 0.3))
     );
     cones.reserve(500);
+
 }
 
 void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose) {
@@ -74,6 +77,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     // un problema che potrei avere è che o chiamo isam update spesso e vedo i coni che mi caca fuori
     // oppure pubblico il cono appena lo vedo e lo raffino dopo
     // se sono operazioni abbastanza veloci ho una mappa solida anche per l'autox, altrimenti solo trackdrive
+
 
     gtsam::Pose3 gtsam_pose(
         gtsam::Rot3::Quaternion(
@@ -108,34 +112,55 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     const auto cones = image_processor->getConeInCameraFrame(bounding_boxes_list);
     auto cones_world_frame = image_transformer->cameraToWorld(cones);
 
-    if (this->cones.empty()){
-        Cone& first_cone = cones_world_frame[0];
-        this->cones.push_back(cones_world_frame[0]);
-        kd_tree_cones.addPoints(cones.size()-1, cones.size());
-        new_values.insert(gtsam::Symbol('l', cone_idx++), gtsam::Point3(first_cone.position_world_frame.x, first_cone.position_world_frame.y, first_cone.position_world_frame.z));
+    if(cones_world_frame.empty()){
+        RCLCPP_ERROR(this->get_logger(), "No cone found, skipping");
+        return;
     }
+
+    //roba brutta per provare faiss
+    if (this->cones.empty()){
+        Cone first_cone = cones_world_frame[0];
+        first_cone.id = cone_idx++;
+        this->cones.push_back(first_cone);
+        // kd_tree_cones.addPoints(cones.size()-1, cones.size());
+        new_values.insert(gtsam::Symbol('l', cone_idx-1), gtsam::Point3(first_cone.position_world_frame.x, first_cone.position_world_frame.y, first_cone.position_world_frame.z));
+    }
+    float* faiss_cones = new float[this->cones.size()*3];
+    for(size_t i = 0; i<this->cones.size(); i++){
+        faiss_cones[3*i] = this->cones[i].position_world_frame.x;
+        faiss_cones[3*i +1] = this->cones[i].position_world_frame.y;
+        faiss_cones[3*i +2] = this->cones[i].position_world_frame.z;
+    }
+    faiss_index.reset();
+    faiss_index.add(this->cones.size(), faiss_cones);
 
     for (const auto& cone : cones_world_frame){
         // ho seguito l'esempio in nanoflann/example/dynamic_pointcloud_example.cpp
-        static const double DIST_THRESHOLD = 3.0;
-        size_t ret_idx;
-        float out_dist_square;
-        auto start = std::chrono::high_resolution_clock::now();
-        nanoflann::KNNResultSet<float> result_set(1); //1 come magic number perchè voglio il primo vicino più vicino
-        result_set.init(&ret_idx, &out_dist_square);
-        float query_pt[3] = {cone.position_world_frame.x, cone.position_world_frame.y, cone.position_world_frame.z};
-        kd_tree_cones.findNeighbors(result_set, query_pt, {10});
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
         int matched_id;
-        Eigen::Map<const Eigen::Vector3f> a(&cone.position_world_frame.x);
-        Eigen::Map<const Eigen::Vector3f> b(&this->cones[ret_idx].position_world_frame.x);
+        // static const double DIST_THRESHOLD = 3.0;
+        // size_t ret_idx;
+        // float out_dist_square;
+        // auto start = std::chrono::high_resolution_clock::now();
+        // nanoflann::KNNResultSet<float> result_set(1); //1 come magic number perchè voglio il primo vicino più vicino
+        // result_set.init(&ret_idx, &out_dist_square);
+        float query_pt[3] = {cone.position_world_frame.x, cone.position_world_frame.y, cone.position_world_frame.z};
+        // kd_tree_cones.findNeighbors(result_set, query_pt, {10});
+        // auto end = std::chrono::high_resolution_clock::now();
+        // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
 
+        float D; // distanza
+        faiss::idx_t I; // indice in faiss_cones
+        faiss_index.search(1, query_pt, 1, &D, &I);
+
+        std::cout<<"distance: "<< D << " index: " << I << std::endl;
+
+        Eigen::Map<const Eigen::Vector3f> a(&cone.position_world_frame.x);
+        Eigen::Map<const Eigen::Vector3f> b(&this->cones[I].position_world_frame.x);
         // non ho gia visto il cono in esame
-        if ((a-b).norm()>DIST_THRESHOLD){
+        if ((a-b).norm()>this->dist_threshold){
             this->cones.emplace_back(cone.position_world_frame, "colore", cone_idx++);
             // kd_tree_cones.addPoints(cone_idx-1, cone_idx); //sono gli indici nel contenitore
-            kd_tree_cones.addPoints(this->cones.size()-1, this->cones.size());
+            // kd_tree_cones.addPoints(this->cones.size()-1, this->cones.size());
             //va aggiunto a isam come values
             new_values.insert(
                 gtsam::Symbol('l', cone_idx-1),
@@ -144,7 +169,7 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
             matched_id = cone_idx-1;
         }
         else
-            matched_id = this->cones[ret_idx].id;
+            matched_id = this->cones[I].id;
 
         gtsam::Point3 cone_point(cone.position_world_frame.x, cone.position_world_frame.y, cone.position_world_frame.z);
         double range = gtsam_pose.range(cone_point);
@@ -160,13 +185,11 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
     if (debug) {
         printDebug(bounding_boxes_list, cones, cones_world_frame);
     }
-    // isam2.update()
-    isam2.update(new_factors, new_values);
-    new_factors.resize(0);
-    new_values.clear();
-    //dovrei pubblicare quelli che mi dà isam
-    // proviamoci
-    // if(keyframe_handler->keyframe_strategy->isKeyframeInvalid()){
+
+    if(keyframe_handler->keyframe_strategy->isKeyframeInvalid()){
+        isam2.update(new_factors, new_values);
+        new_factors.resize(0);
+        new_values.clear();
         gtsam::Values estimate = isam2.calculateEstimate();
         auto landmarks = estimate.filter(gtsam::Symbol::ChrTest('l'));
         for (const auto & val : landmarks){
@@ -177,10 +200,12 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
             c.position_world_frame.y = p.y();
             c.position_world_frame.z = p.z();
         }
-    // }
+
+    }
     ros_handler->publish_cones(this->cones);
     // quando faccio isam update pulisco il grafo che stavo mantenendo qua (viene aggiunto tramite isam update)
     RCLCPP_INFO(this->get_logger(), "%d", cone_idx);
+    delete[] faiss_cones;
 }
 
 void DepthConeMapNode::cameraInfoCallback(const sensor_msgs::msg::CameraInfo::ConstSharedPtr& camera_info) {
