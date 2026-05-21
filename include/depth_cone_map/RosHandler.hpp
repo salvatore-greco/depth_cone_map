@@ -23,12 +23,10 @@
 
 
 class DepthConeMapNode;
-
 class RosHandler{
     public:
         using callback = std::function<void(
             const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr&,
-            const sensor_msgs::msg::Image::ConstSharedPtr&,
             const sensor_msgs::msg::Image::ConstSharedPtr&,
             const driverless_msgs::msg::PoseStamped::ConstSharedPtr&)
         >;
@@ -43,8 +41,6 @@ class RosHandler{
 
         message_filters::Subscriber<sensor_msgs::msg::Image> depth_sub;
 
-        message_filters::Subscriber<sensor_msgs::msg::Image> image_left_sub;
-
         message_filters::Subscriber<driverless_msgs::msg::PoseStamped> pose_sub;
 
         rclcpp::Publisher<driverless_msgs::msg::MarkerArrayStamped>::SharedPtr cone_pub;
@@ -56,7 +52,7 @@ class RosHandler{
         std::shared_ptr<message_filters::Synchronizer<message_filters::sync_policies::ApproximateTime<
             driverless_msgs::msg::BoundingBoxes,
             sensor_msgs::msg::Image,
-            sensor_msgs::msg::Image, driverless_msgs::msg::PoseStamped>>> sync;
+            driverless_msgs::msg::PoseStamped>>> sync;
 
         rclcpp::Node* node_ptr;
 

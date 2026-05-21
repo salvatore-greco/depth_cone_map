@@ -34,7 +34,7 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
     ros_handler = std::make_unique<RosHandler>(
         this,
         this->map_frame_name,
-        std::bind(&DepthConeMapNode::callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+        std::bind(&DepthConeMapNode::callback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
         std::bind(&DepthConeMapNode::cameraInfoCallback, this, std::placeholders::_1)
     );
     image_processor = std::make_unique<ImageProcessor>(this->get_logger(), this->percentile, message_container);
@@ -64,7 +64,7 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) : Node("d
 
 }
 
-void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const sensor_msgs::msg::Image::ConstSharedPtr& image_left, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose) {
+void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::ConstSharedPtr& bounding_boxes, const sensor_msgs::msg::Image::ConstSharedPtr& depth_image, const driverless_msgs::msg::PoseStamped::ConstSharedPtr& pose) {
 
     static int cone_idx = 0;
     static int pose_idx = 0;
