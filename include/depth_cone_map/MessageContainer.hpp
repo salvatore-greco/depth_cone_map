@@ -14,6 +14,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include <iostream>
 
+//TODO: leva image left!!!
 class MessageContainer {
 public:
     MessageContainer(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb,
@@ -36,12 +37,10 @@ public:
         return bb;
     }
 
-    void saveMessages(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb, sensor_msgs::msg::Image::ConstSharedPtr depth, sensor_msgs::msg::Image::ConstSharedPtr current_image){
+    void saveMessages(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb, sensor_msgs::msg::Image::ConstSharedPtr depth){
         const std::lock_guard<std::mutex> lock(this->mutex);
         this->bb = std::move(bb);
         this->depth = std::move(depth);
-        this->current_image = std::move(current_image);
-        // keyframe_handler->saveKeyframe(current_image);
     }
 
 private:
@@ -49,7 +48,6 @@ private:
     std::shared_ptr<const sensor_msgs::msg::Image> depth;
     //sensor_msgs::msg::Image::ConstSharedPtr depth;
 
-    std::shared_ptr<const sensor_msgs::msg::Image> current_image;
     std::unique_ptr<KeyframeHandler> keyframe_handler;
 
     std::mutex mutex;
