@@ -41,7 +41,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(simdjson)
 add_library(source src/ImageProcessor.cpp src/RosHandler.cpp
-            src/ImageTransformer.cpp)
+            src/ImageTransformer.cpp src/DataAssociator.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_node(
