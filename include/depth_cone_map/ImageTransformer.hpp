@@ -26,7 +26,7 @@ public:
         message_container(message_container)
         {};
 
-        std::vector<Cone> cameraToWorld(const std::vector<cv::Point3f> &cones);
+        std::vector<Cone> cameraToWorld(const std::vector<Cone> &cones);
 
 
 
