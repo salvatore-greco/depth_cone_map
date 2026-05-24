@@ -25,7 +25,6 @@ find_package(OpenCV REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(GTSAM REQUIRED)
-find_package(nanoflann REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(faiss CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
@@ -41,7 +40,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(simdjson)
 add_library(source src/ImageProcessor.cpp src/RosHandler.cpp
-            src/ImageTransformer.cpp src/DataAssociator.cpp)
+            src/ImageTransformer.cpp src/DataAssociator.cpp src/GtsamWrapper.cpp)
 
 add_library(node_composition SHARED src/DepthConeMapNode.cpp)
 rclcpp_components_register_node(
@@ -64,7 +63,7 @@ target_include_directories(source PUBLIC
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen faiss)
+target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen faiss OpenMP::OpenMP_CXX)
 ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
