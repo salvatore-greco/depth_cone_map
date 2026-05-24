@@ -14,6 +14,7 @@ enum class ConeColor{
 
 struct Cone{
     Cone(cv::Point3f pos, ConeColor color, int id) : position_world_frame(pos), color(color), id(id){};
+    Cone() = default;
     cv::Point3f position_world_frame;
     ConeColor color;
     int id;
