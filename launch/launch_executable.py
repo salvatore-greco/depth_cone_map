@@ -15,7 +15,7 @@ def generate_launch_description():
     node = Node(
         package="depth_cone_map",
         executable="node_executable",
-        name="depthConeMapNode",
+        name="DepthConeMapNode",
         output="both",
         remappings=[
             ("/bounding_boxes", "/cone_detection/output"),
@@ -27,6 +27,6 @@ def generate_launch_description():
             ("/camera_left_image", "/zed/zed_node/left/color/rect/image"),
         ],
         parameters=[config, {"debug": LaunchConfiguration("debug")}],
-        prefix="gdbserver localhost:3000",
+        # prefix="gdbserver localhost:3000",
     )
     return LaunchDescription([debug, node])

@@ -32,8 +32,8 @@ class KeyframeHandler{
         return current_keyframe;
     }
 
-    private:
     std::unique_ptr<AbstractKeyframeStrategy> keyframe_strategy;
+    private:
     Eigen::Matrix<double, 259, Eigen::Dynamic> current_keyframe_feature;
     cv::Mat current_keyframe;
 };

@@ -37,15 +37,26 @@ public:
         return bb;
     }
 
-    void saveMessages(driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb, sensor_msgs::msg::Image::ConstSharedPtr depth){
+    std::shared_ptr<const driverless_msgs::msg::PoseStamped> getPose() {
         const std::lock_guard<std::mutex> lock(this->mutex);
-        this->bb = std::move(bb);
-        this->depth = std::move(depth);
+        return pose;
+    }
+
+    void saveMessages(
+        driverless_msgs::msg::BoundingBoxes::ConstSharedPtr bb,
+        sensor_msgs::msg::Image::ConstSharedPtr depth,
+        driverless_msgs::msg::PoseStamped::ConstSharedPtr pose
+    ){
+        const std::lock_guard<std::mutex> lock(this->mutex);
+        this->bb = bb;
+        this->depth = depth;
+        this->pose = pose;
     }
 
 private:
     std::shared_ptr<const driverless_msgs::msg::BoundingBoxes> bb;
     std::shared_ptr<const sensor_msgs::msg::Image> depth;
+    std::shared_ptr<const driverless_msgs::msg::PoseStamped> pose;
     //sensor_msgs::msg::Image::ConstSharedPtr depth;
 
     std::unique_ptr<KeyframeHandler> keyframe_handler;

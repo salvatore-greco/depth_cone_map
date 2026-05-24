@@ -43,6 +43,10 @@ void RosHandler::publish_cones(std::vector<Cone>& cones) const{
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.x = 0.0;
         marker.pose.orientation.z = 0.0;
+        marker.color.r = 0.0;
+        marker.color.b = 0.0;
+        marker.color.g = 0.0;
+        marker.color.a = 0.0;
         markers.push_back(std::move(marker)); //non posso usare emplace back perchè il messaggio non ha un costruttore con argomenti.
     }
     driverless_msgs::msg::MarkerArrayStamped marker_array_stamped;
