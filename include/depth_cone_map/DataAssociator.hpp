@@ -26,10 +26,11 @@ class DataAssociator {
 
     public:
         DataAssociator();
-        void buildIndex(const std::vector<Cone>& cones);
+        void updateIndex(const std::vector<Cone>& cones);
         faiss::idx_t searchNearestCone(const Cone& cone);
     private:
         std::unordered_map<ConeColor, IndexWithId> faiss_indexes;
+        size_t cones_vector_size;
 };
 
 

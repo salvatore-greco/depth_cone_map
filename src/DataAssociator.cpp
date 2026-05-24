@@ -2,7 +2,7 @@
 #include <vector>
 #include "depth_cone_map/Cone.hpp"
 
-DataAssociator::DataAssociator(){
+DataAssociator::DataAssociator(): cones_vector_size(0){
    faiss_indexes.emplace(ConeColor::BLUE, IndexWithId());
    faiss_indexes.emplace(ConeColor::YELLOW, IndexWithId());
    faiss_indexes.emplace(ConeColor::ORANGE, IndexWithId());
@@ -10,7 +10,7 @@ DataAssociator::DataAssociator(){
 }
 
 
-void DataAssociator::buildIndex(const std::vector<Cone>& cones){
+void DataAssociator::updateIndex(const std::vector<Cone>& cones){
     std::vector<cv::Point3f> faiss_blue_cone;
     std::vector<cv::Point3f> faiss_yellow_cone;
     std::vector<cv::Point3f> faiss_orange_cone;
@@ -19,37 +19,34 @@ void DataAssociator::buildIndex(const std::vector<Cone>& cones){
     std::vector<faiss::idx_t> yellow_idx;
     std::vector<faiss::idx_t> orange_idx;
     std::vector<faiss::idx_t> large_orange_idx;
-    for (const auto& cone: cones){
-        switch(cone.color){
+    for(size_t i = this->cones_vector_size; i<cones.size(); i++){
+        switch(cones[i].color){
             case ConeColor::BLUE:
-            faiss_blue_cone.push_back(cone.position_world_frame);
-            blue_idx.push_back(cone.id);
+            faiss_blue_cone.push_back(cones[i].position_world_frame);
+            blue_idx.push_back(cones[i].id);
             break;
             case ConeColor::UNKNOWN:
             break;
             case ConeColor::YELLOW:
-            faiss_yellow_cone.push_back(cone.position_world_frame);
-            yellow_idx.push_back(cone.id);
+            faiss_yellow_cone.push_back(cones[i].position_world_frame);
+            yellow_idx.push_back(cones[i].id);
             break;
             case ConeColor::ORANGE:
-            faiss_orange_cone.push_back(cone.position_world_frame);
-            orange_idx.push_back(cone.id);
+            faiss_orange_cone.push_back(cones[i].position_world_frame);
+            orange_idx.push_back(cones[i].id);
             break;
             case ConeColor::LARGE_ORANGE:
-            faiss_large_orange_cone.push_back(cone.position_world_frame);
-            large_orange_idx.push_back(cone.id);
+            faiss_large_orange_cone.push_back(cones[i].position_world_frame);
+            large_orange_idx.push_back(cones[i].id);
             break;
         }
     }
-    for(auto& index_struct : faiss_indexes){
-        index_struct.second.index->reset();
-        index_struct.second.id.reset();
-    }
 
-    faiss_indexes.at(ConeColor::BLUE).id.add_with_ids(faiss_blue_cone.size(), reinterpret_cast<float*>(faiss_blue_cone.data()), blue_idx.data());
-    faiss_indexes.at(ConeColor::YELLOW).id.add_with_ids(faiss_yellow_cone.size(), reinterpret_cast<float*>(faiss_yellow_cone.data()), yellow_idx.data());
-    faiss_indexes.at(ConeColor::ORANGE).id.add_with_ids(faiss_orange_cone.size(), reinterpret_cast<float*>(faiss_orange_cone.data()), orange_idx.data());
-    faiss_indexes.at(ConeColor::LARGE_ORANGE).id.add_with_ids(faiss_large_orange_cone.size(), reinterpret_cast<float*>(faiss_large_orange_cone.data()), large_orange_idx.data());
+    if (!faiss_blue_cone.empty()) faiss_indexes.at(ConeColor::BLUE).id.add_with_ids(faiss_blue_cone.size(), reinterpret_cast<float*>(faiss_blue_cone.data()), blue_idx.data());
+    if(!faiss_yellow_cone.empty()) faiss_indexes.at(ConeColor::YELLOW).id.add_with_ids(faiss_yellow_cone.size(), reinterpret_cast<float*>(faiss_yellow_cone.data()), yellow_idx.data());
+    if(!faiss_orange_cone.empty()) faiss_indexes.at(ConeColor::ORANGE).id.add_with_ids(faiss_orange_cone.size(), reinterpret_cast<float*>(faiss_orange_cone.data()), orange_idx.data());
+    if(!faiss_large_orange_cone.empty()) faiss_indexes.at(ConeColor::LARGE_ORANGE).id.add_with_ids(faiss_large_orange_cone.size(), reinterpret_cast<float*>(faiss_large_orange_cone.data()), large_orange_idx.data());
+    this->cones_vector_size = cones.size();
 }
 
 
