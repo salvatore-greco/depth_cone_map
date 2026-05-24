@@ -3,7 +3,8 @@
 
 #include "RosHandler.hpp"
 #include "depth_cone_map/Cone.hpp"
-#include "depth_cone_map/ConeAdaptor.hpp"
+#include "depth_cone_map/DataAssociator.hpp"
+#include "depth_cone_map/GtsamWrapper.hpp"
 #include "depth_cone_map/KeyframeHandler.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
@@ -28,7 +29,7 @@
 #include <faiss/IndexFlat.h>
 #include <gtsam/nonlinear/ISAM2.h>
 #include <gtsam/linear/NoiseModel.h>
-#include <nanoflann.hpp>
+#include "GtsamWrapper.hpp"
 
 class DepthConeMapNode : public rclcpp::Node {
 public:
@@ -48,15 +49,11 @@ private:
 
     std::shared_ptr<KeyframeHandler> keyframe_handler;
 
-    gtsam::ISAM2 isam2;
-
-    ConeAdaptor cone_adaptor;
-    nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, ConeAdaptor>, ConeAdaptor, 3> kd_tree_cones;
     std::vector<Cone> cones;
-    gtsam::noiseModel::Diagonal::shared_ptr prior_noise;
-    gtsam::noiseModel::Diagonal::shared_ptr odom_noise;
-    gtsam::noiseModel::Robust::shared_ptr landmark_noise;
-    faiss::IndexFlatL2 faiss_index;
+
+    std::unique_ptr<DataAssociator> data_associator;
+
+    std::unique_ptr<GtsamWrapper> gtsam_wrapper;
 
     //ROS parameter from launch file
     std::string map_frame_name;
@@ -70,6 +67,8 @@ private:
     double dist_threshold;
 
     bool first_pose = true;
+
+    int cone_idx;
 
     void parameterDeclaration();
 
