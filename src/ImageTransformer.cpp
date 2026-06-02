@@ -1,9 +1,11 @@
 #include "depth_cone_map/ImageTransformer.hpp"
+#include <algorithm>
 #include <opencv2/core/types.hpp>
 #include <rclcpp/logging.hpp>
 #include <vector>
 #include "depth_cone_map/Cone.hpp"
-#include <omp.h>
+// #include <omp.h>
+#include <execution>
 
 std::vector<Cone> ImageTransformer::cameraToWorld(const std::vector<Cone> &cones) {
 
@@ -23,24 +25,17 @@ std::vector<Cone> ImageTransformer::cameraToWorld(const std::vector<Cone> &cones
     }
     std::vector<Cone> cones_world_frame(cones.size());
 
-    #pragma omp parallel for num_threads(4)
-    // for (const auto &cone: cones) {
-    for(size_t i = 0; i<cones.size(); i++){
-        //marker non ha le funzioni per la trasformazione
-        geometry_msgs::msg::Point point_to_transform = cvPoint3fToGeometryMsgsPoint(cones[i].position_world_frame);
+    std::transform(std::execution::par_unseq, cones.begin(), cones.end(), cones_world_frame.begin(), [this, transformation](const Cone& cone){
+        geometry_msgs::msg::Point point_to_transform = cvPoint3fToGeometryMsgsPoint(cone.position_world_frame);
         geometry_msgs::msg::Point point_trasformed;
-        //tf2_buffer->transform(point_to_transform, point_trasformed, "map");
-        //se questa non funziona da tf2_geometry_msgs:
         tf2::doTransform<geometry_msgs::msg::Point>(point_to_transform, point_trasformed, transformation);
-        //std::cout<<"["<<point_trasformed.x<<","<<point_trasformed.y<<","<<point_trasformed.z<<"]"<<std::endl;
-
-        cones_world_frame[i] = Cone(
+        return Cone(
             cv::Point3f(point_trasformed.x, point_trasformed.y, point_trasformed.z),
-            cones[i].color,
+            cone.color,
             -1
         );
-        // cones_world_frame.emplace_back(cv::Point3f(point_trasformed.x, point_trasformed.y, point_trasformed.z), cones[i].color, -1);
-    }
+    });
+
     return cones_world_frame;
 }
 

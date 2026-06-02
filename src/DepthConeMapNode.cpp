@@ -29,7 +29,6 @@
 #include "depth_cone_map/GtsamWrapper.hpp"
 #include "depth_cone_map/MessageContainer.hpp"
 
-// TODO: togliere pose che tanto non serve e usare message container come membro delle classi
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) :
     Node("depth_cone_map", options),
     data_associator(std::make_unique<DataAssociator>()),
@@ -49,8 +48,6 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) :
         image_transformer = std::make_unique<ImageTransformer>(this->get_clock(), this->map_frame_name,
                                                             this->camera_frame_name, this->get_logger(), message_container);
         keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
-        //TODO: fare switch per istanziare la strategy da parametro launch (+ settare parametro tempo)
-        // TODO: implementa l'altra strategia
 
         cones.reserve(500);
         std::cout<<dist_threshold<<std::endl;
