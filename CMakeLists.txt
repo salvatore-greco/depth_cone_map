@@ -26,8 +26,11 @@ find_package(rclcpp_components REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(faiss CONFIG REQUIRED)
+find_package(faiss REQUIRED)
+# richiesto da faiss
 find_package(OpenMP REQUIRED)
+# se faiss è compilato con la gpu va aggiunto cuda toolkit
+find_package(CUDAToolkit REQUIRED)
 
 # including simdjson for bounding boxes message parsing
 # source: Using simdjson as a CMake dependency https://simdjson.github.io/simdjson/md_doc_2basics.html
@@ -63,7 +66,7 @@ target_include_directories(source PUBLIC
         "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 
-target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen faiss OpenMP::OpenMP_CXX)
+target_link_libraries(source PUBLIC simdjson gtsam Eigen3::Eigen faiss)
 ament_target_dependencies(source PUBLIC
         rclcpp
         driverless_msgs
@@ -81,23 +84,6 @@ ament_target_dependencies(source PUBLIC
 
 target_link_libraries(node_composition PUBLIC source)
 ament_target_dependencies(node_composition PUBLIC rclcpp_components)
-# ament_target_dependencies(node_composition PUBLIC
-#         rclcpp
-#         rclcpp_components
-#         message_filters
-#         driverless_msgs
-#         geometry_msgs
-#         sensor_msgs
-#         visualization_msgs
-#         cv_bridge
-#         tf2
-#         tf2_ros
-#         tf2_geometry_msgs
-# )
-
-
-# add_executable(node_executable src/main.cpp)
-# target_link_libraries(node_executable PUBLIC simdjson node_composition source)
 
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
