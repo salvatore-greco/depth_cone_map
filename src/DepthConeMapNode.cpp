@@ -1,8 +1,6 @@
 #include "depth_cone_map/DepthConeMapNode.hpp"
 #include <Eigen/Core>
 #include <Eigen/src/Core/Matrix.h>
-#include <faiss/IndexFlat.h>
-#include <faiss/MetricType.h>
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -11,23 +9,6 @@
 #include <opencv2/core/types.hpp>
 #include <rclcpp/logging.hpp>
 #include <vector>
-#include <gtsam/base/Vector.h>
-#include <gtsam/geometry/BearingRange.h>
-#include <gtsam/geometry/Point2.h>
-#include <gtsam/geometry/Point3.h>
-#include <gtsam/geometry/Rot3.h>
-#include <gtsam/linear/NoiseModel.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/PriorFactor.h>
-#include <gtsam/nonlinear/Values.h>
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/slam/BetweenFactor.h>
-#include "depth_cone_map/Cone.hpp"
-#include "depth_cone_map/ConeAdaptor.hpp"
-#include "depth_cone_map/DataAssociator.hpp"
-#include "depth_cone_map/GtsamWrapper.hpp"
-#include "depth_cone_map/MessageContainer.hpp"
 
 DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) :
     Node("depth_cone_map", options),
