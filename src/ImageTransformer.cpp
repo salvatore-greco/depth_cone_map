@@ -10,10 +10,11 @@
 std::vector<Cone> ImageTransformer::cameraToWorld(const std::vector<Cone> &cones) {
 
     geometry_msgs::msg::TransformStamped transformation;
-    auto time = message_container->getPose()->header.stamp;
+    auto time_pose = message_container->getPose()->header.stamp;
+    auto time_depth = message_container->getDepthImage()->header.stamp;
     try {
         transformation = tf2_buffer->lookupTransform(
-            map_frame_name, camera_frame_name, time);
+            map_frame_name, camera_frame_name, time_depth);
     }
     catch (const tf2::LookupException& e) {
         RCLCPP_ERROR(logger, "Error when looking up transform %s", e.what());
