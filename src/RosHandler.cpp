@@ -31,6 +31,23 @@ void RosHandler::publish_cones(std::vector<Cone>& cones) const{
     for (const auto& cone : cones){
         visualization_msgs::msg::Marker marker;
         //copiando come viene fatto da clustering_node
+        // il colore del cono viene identificato da traj tramite l'id del marker.
+        switch(cone.color){
+            case ConeColor::BLUE:
+                marker.id = cone.id;
+                break;
+            case ConeColor::YELLOW:
+                marker.id = cone.id + 1000;
+                break;
+            case ConeColor::ORANGE:
+                marker.id = cone.id + 2000;
+                break;
+            case ConeColor::LARGE_ORANGE:
+                marker.id = cone.id + 3000;
+                break;
+            case ConeColor::UNKNOWN:
+                break;
+        }
         marker.type = marker.CYLINDER;
         marker.header.frame_id = this->map_frame_name;
         marker.scale.x = 0.5;
@@ -43,6 +60,7 @@ void RosHandler::publish_cones(std::vector<Cone>& cones) const{
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.x = 0.0;
         marker.pose.orientation.z = 0.0;
+        // Questo attributo colore è solo per la visualizzazione in rviz.
         marker.color.r = 0.0;
         marker.color.b = 0.0;
         marker.color.g = 0.0;
