@@ -11,6 +11,7 @@ Sono necessarie le seguenti dipendenze di sistema:
 È necessaria anche la libreria `faiss`; ci sono 2 vie per installarla: 
 - compilare da sorgente, si rimanda al repo ufficiale di faiss [istruzioni per l'installazione](https://github.com/facebookresearch/faiss/blob/main/INSTALL.md)
 - usare vcpkg
+
 su x86 ho usato vcpkg, su jetson l'ho compilato da sorgente. Se si usa vcpkg c'è da aggiungere il flag `-DCMAKE_TOOLCHAIN_FILE=/path/vcpkg/scripts/buildsystems/vcpkg.cmake` a colcon (suggerisco di creare il file `colcon_defaults.yaml` nella root del proprio workspace).
 
 ## TF
