@@ -60,6 +60,7 @@ private:
     bool isDepthValueInvalid(const float& value) const;
 
     cv::Point extractBoundingBox(simdjson::ondemand::array& bounding_box);
+    simdjson::ondemand::parser parser;
 };
 
 #endif //BUILD_IMAGEPROCESSOR_H

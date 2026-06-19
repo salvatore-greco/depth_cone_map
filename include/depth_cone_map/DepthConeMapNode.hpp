@@ -64,7 +64,8 @@ private:
 
     bool debug;
 
-    double dist_threshold;
+    double cone_dist_threshold;
+    double car_cone_dist_threshold;
 
     bool first_pose = true;
 

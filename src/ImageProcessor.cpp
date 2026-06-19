@@ -16,11 +16,10 @@ std::list<std::pair<cv::Rect, ConeColor>> ImageProcessor::getBBInJSON() {
 
     std::list<std::pair<cv::Rect, ConeColor>> bb_points;
     try {
-        simdjson::ondemand::parser parser;
         auto doc = parser.iterate(json_bb);
         for (simdjson::ondemand::object object: doc) {
-            auto color = object["color"].get_string();
-            ConeColor cone_color = colorStringToEnum(std::move(color));
+            std::string_view color = object["color"].get_string();
+            ConeColor cone_color = colorStringToEnum(color);
             simdjson::ondemand::array bb_points_array = object.find_field("BB").get_array();
             auto points_it = bb_points_array.begin();
             simdjson::ondemand::array top_left = *points_it;
@@ -52,11 +51,11 @@ std::vector<Cone> ImageProcessor::getConeInCameraFrame(const std::list<std::pair
 
     // Calcolo dell'orientamento per identificare la "vera base" del cono (Gravity-Aware)
     auto pose = message_container->getPose();
-    Eigen::Quaterniond camera_quaternion(pose->pose.orientation.w, pose->pose.orientation.x, 
+    Eigen::Quaterniond camera_quaternion(pose->pose.orientation.w, pose->pose.orientation.x,
                                           pose->pose.orientation.y, pose->pose.orientation.z);
     camera_quaternion.normalize();
     Eigen::Matrix3d rotation_matrix = camera_quaternion.toRotationMatrix();
-    
+
     // Matrice di rotazione Optical Frame (C -> W)
     // ROS Link: X=forward, Y=left, Z=up
     // Optical: Z=forward, X=right, Y=down
@@ -68,7 +67,7 @@ std::vector<Cone> ImageProcessor::getConeInCameraFrame(const std::list<std::pair
     // Proiezione della gravità del mondo [0, 0, -1] nel piano immagine (X, Y dell'optical frame)
     double gx = -rotation_matrix_optical(2, 0);
     double gy = -rotation_matrix_optical(2, 1);
-    
+
     double mag_sq = gx*gx + gy*gy;
     double u, v;
     const double EPSILON = 1e-6;
@@ -92,21 +91,21 @@ std::vector<Cone> ImageProcessor::getConeInCameraFrame(const std::list<std::pair
         const float cone_distance = *perc_it;
         if (isDepthValueInvalid(cone_distance))
             continue;
-            
+
         // Centro della Bounding Box
         cv::Point2f center(bounding_box.first.x + bounding_box.first.width / 2.0f,
                            bounding_box.first.y + bounding_box.first.height / 2.0f);
-        
+
         // Spostamento dal centro verso la base seguendo il versore di gravità
         // Usiamo un offset del 40% dell'altezza (equivalente al vecchio 0.7 * rows dal top)
         float offset = bounding_box.first.height * 0.4f;
-        
+
         cv::Vec3d pixel(center.x + u * offset, center.y + v * offset, 1);
         cv::Mat point_camera_frame = backProjection(std::move(pixel), cone_distance);
-        
-        cones.emplace_back(cv::Point3f(point_camera_frame.at<double>(0,0), 
-                                      point_camera_frame.at<double>(1,0), 
-                                      point_camera_frame.at<double>(2,0)), 
+
+        cones.emplace_back(cv::Point3f(point_camera_frame.at<double>(0,0),
+                                      point_camera_frame.at<double>(1,0),
+                                      point_camera_frame.at<double>(2,0)),
                            bounding_box.second, -1);
     }
     return cones;

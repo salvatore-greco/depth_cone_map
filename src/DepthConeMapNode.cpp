@@ -30,8 +30,9 @@ DepthConeMapNode::DepthConeMapNode(const rclcpp::NodeOptions& options) :
                                                             this->camera_frame_name, this->get_logger(), message_container);
         keyframe_handler = std::make_shared<KeyframeHandler>(std::make_unique<TemporalKeyframeStrategy>(std::chrono::seconds(1))); //è shared ptr in caso volessi mettere superpoint-glue in un thread
 
+
         cones.reserve(500);
-        std::cout<<dist_threshold<<std::endl;
+        std::cout<<cone_dist_threshold<<std::endl;
 
 }
 
@@ -70,18 +71,18 @@ void DepthConeMapNode::callback(const driverless_msgs::msg::BoundingBoxes::Const
 
     for (const auto& cone : cones_world_frame){
         if(cone.color == ConeColor::ORANGE) continue; //FIXME: ricordati di levarlo!
-        Eigen::Map<const Eigen::Vector3f> a(&cone.position_world_frame.x);
+        Eigen::Map<const Eigen::Vector3f> actual_cone(&cone.position_world_frame.x);
         Eigen::Map<const Eigen::Vector3d> eigen_pose(&(pose->pose.position.x));
-        if((a-eigen_pose.cast<float>()).norm() > 20.0) continue; // il cono è troppo lontano, non ha senso metterlo
+        if((actual_cone-eigen_pose.cast<float>()).norm() > car_cone_dist_threshold) continue; // il cono è troppo lontano, non ha senso metterlo
 
         int matched_id;
         const auto I = data_associator->searchNearestCone(cone);
 
-        Eigen::Map<const Eigen::Vector3f> b(&this->cones[I].position_world_frame.x);
+        Eigen::Map<const Eigen::Vector3f> nearest_neighbor(&this->cones[I].position_world_frame.x);
 
 
         // non ho gia visto il cono in esame e non è troppo lontano dalla macchina
-        if ((I == -1) || (a-b).norm()>this->dist_threshold){
+        if ((I == -1) || (actual_cone-nearest_neighbor).norm()>this->cone_dist_threshold){
             this->cones.emplace_back(cone.position_world_frame, cone.color, cone_idx++);
             //va aggiunto a isam come values
             gtsam_wrapper->saveValue(&cone, cone_idx-1);
@@ -129,7 +130,8 @@ void DepthConeMapNode::parameterDeclaration() {
     this->declare_parameter("camera_frame", "zed_left_camera_optical_frame");
     this->declare_parameter("percentile", 0.2);
     this->declare_parameter("debug", false);
-    this->declare_parameter("dist_threshold", 3.0);
+    this->declare_parameter("cone_dist_threshold", 3.0);
+    this->declare_parameter("car_cone_dist_threshold", 20.0);
 }
 
 void DepthConeMapNode::parameterInitialization() {
@@ -137,7 +139,8 @@ void DepthConeMapNode::parameterInitialization() {
     camera_frame_name = this->get_parameter("camera_frame").as_string();
     percentile = this->get_parameter("percentile").as_double();
     debug = this->get_parameter("debug").as_bool();
-    dist_threshold = this->get_parameter("dist_threshold").as_double();
+    cone_dist_threshold = this->get_parameter("cone_dist_threshold").as_double();
+    car_cone_dist_threshold = this->get_parameter("car_cone_dist_threshold").as_double();
 }
 
 void DepthConeMapNode::printDebug(const std::list<std::pair<cv::Point, cv::Point>>& bounding_boxes_list,

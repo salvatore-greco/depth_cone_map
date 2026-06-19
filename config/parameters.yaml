@@ -3,4 +3,5 @@ DepthConeMapNode:
         world_frame: map
         camera_frame: zed_left_camera_optical_frame
         percentile: 0.2
-        dist_threshold: 4.0
+        cone_dist_threshold: 4.0
+        car_cone_dist_threshold: 20.0
